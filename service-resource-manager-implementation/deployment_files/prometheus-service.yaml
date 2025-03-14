@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2022-10-14T09:17:57Z"
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.30.0
+    prometheus: k8s
+  managedFields:
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:status:
+        f:loadBalancer:
+          f:ingress: {}
+    manager: controller
+    operation: Update
+    subresource: status
+    time: "2022-10-14T09:48:08Z"
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:labels:
+          .: {}
+          f:app.kubernetes.io/component: {}
+          f:app.kubernetes.io/name: {}
+          f:app.kubernetes.io/part-of: {}
+          f:app.kubernetes.io/version: {}
+          f:prometheus: {}
+      f:spec:
+        f:allocateLoadBalancerNodePorts: {}
+        f:externalTrafficPolicy: {}
+        f:internalTrafficPolicy: {}
+        f:ports:
+          .: {}
+          k:{"port":8080,"protocol":"TCP"}:
+            .: {}
+            f:name: {}
+            f:port: {}
+            f:protocol: {}
+            f:targetPort: {}
+          k:{"port":9090,"protocol":"TCP"}:
+            .: {}
+            f:name: {}
+            f:port: {}
+            f:protocol: {}
+            f:targetPort: {}
+        f:selector: {}
+        f:sessionAffinity: {}
+        f:sessionAffinityConfig:
+          .: {}
+          f:clientIP:
+            .: {}
+            f:timeoutSeconds: {}
+        f:type: {}
+    manager: kubectl
+    operation: Update
+    time: "2022-10-14T09:48:08Z"
+  name: prometheus-k8s
+  namespace: monitoring
+  resourceVersion: "30269799"
+  selfLink: /api/v1/namespaces/monitoring/services/prometheus-k8s
+  uid: 1f3a5527-f254-4433-a3ee-6d9b4ee16329
+spec:
+  allocateLoadBalancerNodePorts: true
+  clusterIP: 10.152.183.155
+  clusterIPs:
+  - 10.152.183.155
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: web
+    nodePort: 31892
+    port: 9090
+    protocol: TCP
+    targetPort: web
+  - name: reloader-web
+    nodePort: 32281
+    port: 8080
+    protocol: TCP
+    targetPort: reloader-web
+  selector:
+    app: prometheus
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    prometheus: k8s
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 203.0.113.171

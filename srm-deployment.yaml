@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: piedgecontroller
+  name: piedgecontroller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: piedgecontroller
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: piedgecontroller
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_MASTER_HOSTNAME
+              value: "sunrise6gsrv"
+            - name: KUBERNETES_MASTER_PASSWORD
+              value: "dLask"
+            - name: KUBERNETES_MASTER_IP
+              value: "146.124.106.229"
+            - name: KUBERNETES_MASTER_PORT
+              value: "16443"  
+            - name: KUBE_CONFIG_PATH  
+              value: "kubeconfig/config.yaml"
+            - name: EMP_STORAGE_URI
+              value: mongodb://mongopiedge:27017
+            - name: KUBERNETES_MASTER_TOKEN
+              value: TVVGV1FJb3l0alNUOUdEeVRvbnZKdGhZS3FXUXg2aG5mMGVxekRqRnZhWT0K
+            - name: MONITORING_SERVICE_PASSWORD
+              value: "tandem"
+            - name: MEC_PLATFORM_IP
+              value: "146.124.106.209"
+            - name: MEC_PLATFORM_PORT
+              value: "32500"
+            - name: MONITORING_IP_PROXY
+              value: "146.124.106.220"
+            - name: MONITORING_PORT_PROXY
+              value: "31000"
+            - name: MONITORING_IP
+              value: "146.124.106.209"
+            - name: MONITORING_NODE_PORT
+              value: "443"
+            - name: DRIVER
+              value: "kubernetes"
+            - name: ARTIFACT_MANAGER_ADDRESS
+              value: "artifact-manager"            
+
+          image: piedge/pi_edge:ectf
+          name: piedgecontroller
+          ports:
+            - containerPort: 8080
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: piedgecontroller
+  name: piedgecontroller
+spec:
+  type: NodePort
+  ports:
+    - name: "8080"
+      nodePort: 32415
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: piedgecontroller
+status:
+  loadBalancer: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: service-resource-manager
+  name: service-resource-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-resource-manager
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: service-resource-manager
+    spec:
+      containers:
+        - env:
+            - name: K8S_ADAPTER_ADDRESS
+              value: "piedgecontroller:8080"
+            - name: PLATFORM_PROVIDER
+              value: "ICOM"
+
+          image: piedge/pi_edge:srm
+          name: service-resource-manager
+          ports:
+            - containerPort: 8080
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: service-resource-manager
+  name: srm
+spec:
+  type: NodePort
+  ports:
+    - name: "8080"
+      nodePort: 32000
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: service-resource-manager
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: srm-ingress
+  namespace: sunrise
+  annotations:
+    #nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  managedFields:
+      - manager: nginx-ingress-controller
+        operation: Update
+        apiVersion: networking.k8s.io/v1
+spec:
+    ingressClassName: nginx
+    rules:
+    - http:
+        paths:
+        - path: /srm(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: srm
+              port:
+                number: 8080

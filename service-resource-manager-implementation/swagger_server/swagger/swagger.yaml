@@ -1,0 +1,159 @@
+openapi: 3.0.0
+info:
+  title: Service Resource Manager
+  description: |
+    API exposed by SRM for testbed resource acquisition
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: dlaskaratos@intracom-telecom.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 2.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+- url: http://virtualserver:8080/0.0.1
+paths:
+  /edge-nodes:
+    get:
+      tags:
+      - Availability zones
+      summary: Retrieve Edge Platform nodes
+      operationId: get_edge_platform_nodes
+      responses:
+        "200":
+          description: List of nodes
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /appinstances:
+    post:
+       tags:
+       - App Instances
+       summary: Installs a helm chart on the edge cloud platform
+       operationId: deploy_app
+       requestBody:
+        description: Request to install a helm chart
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelmChartInstall'
+       responses:
+         "200":
+           description: Helm chart sucessfully installed
+         "400":
+           description: Necessary fields missing
+       x-openapi-router-controller: swagger_server.controllers.app_instance_controller
+    get:
+      tags:
+      - App Instances
+      summary: Instantiates an application specification
+      operationId: get_app_instances
+      responses:
+         "200":
+           description: App instances successfully retrieved
+      x-openapi-router-controller: swagger_server.controllers.app_instance_controller
+  /copy-artifact:
+    post:
+      tags:
+      - Artifact Management
+      summary: Copies artifact from source repository to destination repository
+      requestBody:
+        description: Artifact details including image name, tag, source repository username and password tec
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyArtifactModel'
+      responses:
+        "200":
+          description: Artifact successfully copied
+        "400":
+          description: Mandatory fields missing
+      x-openapi-router-controller: swagger_server.controllers.artifact_controller
+  /artifact-exists:
+    post:
+      tags:
+      - Artifact Management
+      summary: Check if artifact exists in given repository
+      requestBody:
+        description: Artifact details including image name, tag, source repository username and password tec
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactExistsModel'
+      responses:
+        "200":
+          description: Artifact exists
+        "404":
+          description: Artifact does not exist
+        "400":
+          description: Mandatory fields missing        
+      x-openapi-router-controller: swagger_server.controllers.artifact_controller        
+components:
+  schemas:
+    HelmChartInstall:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: http://helm.chart.net/helm.yaml
+        deployment_name:
+          type: string
+          example: test_helm
+        repo_username:
+          type: string
+          example: test1
+        repo_password:
+          type: string
+          example: test1
+    CopyArtifactModel:
+      type: object
+      properties:
+        src_registry:
+          type: string
+          example: http://dockerhub.io
+        src_image_name:
+          type: string
+          example: mongodb
+        src_image_tag:
+          type: string
+          example: latest
+        dst_registry:
+          type: string
+          example: http://dockerhub.io
+        dst_image_name:
+          type: string
+          example: mongodb
+        dst_image_tag:
+          type: string
+          example: latest
+        src_username:
+          type: string
+          example: user123
+        src_password:
+          type: string
+          example: 1234
+        dst_username:
+          type: string
+          example: user123 
+        dst_password:
+          type: string
+          example: 1234
+    ArtifactExistsModel:
+      type: object
+      properties:
+        registry_url:
+          type: string
+          example: http://dockerhub.io
+        image_name:
+          type: string
+          example: mongodb
+        image_tag:
+          type: string
+          example: latest
+        username:
+          type: string
+          example: user123
+        password:
+          type: string
+          example: 1234      

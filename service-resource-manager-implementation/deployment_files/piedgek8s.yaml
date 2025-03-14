@@ -1,0 +1,253 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: piedgecontroller
+  name: piedgecontroller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: piedgecontroller
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: piedgecontroller
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_MASTER_HOST
+              #example value
+              value: https://146.124.106.179:16443
+            - name: KUBERNETES_MASTER_TOKEN
+               #example value
+              value: b3lIOWFQM3NUTWJpSUVBMDNGNmlmVG4wQkd5dXFmWTdFUlFWQVo3UnEycz0K
+            - name: EMP_STORAGE_URI
+              #value: mongodb://mongopiedge:27017
+              value: mongodb://mongoemp:27017
+            - name: MONITORING_IP
+              value: "203.0.113.130"
+            - name: MONITORING_NODE_PORT
+              value: "3000"
+            - name: SYSTEM_DATABASE_PASSWORD
+              value: "pslicom"
+          image: nikospsar/pi_edge:3.0.2
+          name: piedgecontroller
+          ports:
+            - containerPort: 8080
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: piedgecontroller
+  name: piedgecontroller
+spec:
+  type: NodePort
+  ports:
+    - name: "8080"
+      nodePort: 32415
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: piedgecontroller
+status:
+  loadBalancer: {}
+---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  creationTimestamp: null
+#  labels:
+#    io.kompose.service: mongo-db
+#  name: mongo-db
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 100Mi
+#status: {}
+#---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongopiedge
+  name: mongopiedge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mongopiedge
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: mongopiedge
+    spec:
+      containers:
+        - image: mongo
+          name: mongopiedge
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-db
+      restartPolicy: Always
+      volumes:
+        - name: mongo-db
+          persistentVolumeClaim:
+            claimName: mongo-db
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongopiedge
+  name: mongopiedge
+spec:
+  type: NodePort
+  ports:
+    - name: "27017"
+      nodePort: 32411
+      port: 27017
+      targetPort: 27017
+  selector:
+    io.kompose.service: mongopiedge
+status:
+  loadBalancer: {}
+---
+ apiVersion: networking.k8s.io/v1
+ kind: NetworkPolicy
+ metadata:
+   creationTimestamp: null
+   name: netEMPkub
+ spec:
+   ingress:
+     - from:
+         - podSelector:
+             matchLabels:
+               io.kompose.network/netEMPkub: "true"
+   podSelector:
+     matchLabels:
+       io.kompose.network/netEMPkub: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    app: postgres
+data:
+  POSTGRES_DB: postgresdb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: pslicom
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-pv-volume-pi-edge  # Sets PV's name
+  labels:
+    type: local  # Sets PV's type to local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 200Mi # Sets PV Volume
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim-pi-edge  # Sets name of PVC
+  labels:
+    app: postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany  # Sets read and write access
+  resources:
+    requests:
+      storage: 200Mi  # Sets volume size
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres  # Sets Deployment name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:10.1 # Sets Image
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432  # Exposes container port
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim-pi-edge
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres # Sets service name
+  labels:
+    app: postgres # Labels and Selectors
+spec:
+  type: NodePort # Sets service type
+  ports:
+    - port: 5432 # Sets port to run the postgres application
+  selector:
+    app: postgres

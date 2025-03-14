@@ -1,0 +1,73 @@
+#apiVersion: networking.k8s.io/v1
+#kind: NetworkPolicy
+#metadata:
+#  name: test-network-policy
+#  namespace: default
+#spec:
+#  podSelector:
+#    matchLabels:
+#      role: db
+#  policyTypes:
+#  - Ingress
+#  - Egress
+#  ingress:
+#  - from:
+#    - ipBlock:
+#        cidr: 172.17.0.0/16
+#        except:
+#        - 172.17.1.0/24
+#    - namespaceSelector:
+#        matchLabels:
+#          project: myproject
+#    - podSelector:
+#        matchLabels:
+#          role: frontend
+#    ports:
+#    - protocol: TCP
+#      port: 6379
+#  egress:
+#  - to:
+#    - ipBlock:
+#        cidr: 10.0.0.0/24
+#    ports:
+#    - protocol: TCP
+#      port: 5978
+
+#---
+#kind: NetworkPolicy
+#apiVersion: networking.k8s.io/v1
+#metadata:
+#  name: allow-same-namespace and localhost
+#  namespace: emp
+#spec:
+#  podSelector:
+#    matchLabels:
+#      emp: demoosmeco
+#  ingress:
+#  - from:
+#      - namespaceSelector:
+#         matchLabels:
+#           project: emp
+#      - podSelector:
+#         matchLabels:
+#           emp: demo
+#    ports:
+#      - port: 80
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name:  localhostandnamespace
+  namespace: piedge-system
+spec:
+  podSelector:
+    matchLabels:
+      io.kompose.service: kubempcontr
+  ingress:
+  - from:
+      - ipBlock: #windows_server
+          cidr: 203.0.113.90/24
+      - ipBlock: #localhost
+          cidr: 146.124.106.179/24
+
+
