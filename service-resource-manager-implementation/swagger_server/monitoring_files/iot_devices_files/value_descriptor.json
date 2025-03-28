@@ -1,0 +1,16 @@
+{
+
+"name": "humidity",
+"description": "Ambient humidity in percent",
+"min": "0",
+"max": "100",
+"type": "Int64",
+"uomLabel": "humidity",
+"defaultValue": "0",
+"formatting": "%s",
+"labels": [
+  "environment",
+  "humidity"
+]
+
+}

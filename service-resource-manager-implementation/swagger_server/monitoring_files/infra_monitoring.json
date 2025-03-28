@@ -1,0 +1,216 @@
+{
+	"dashboard": {
+		"annotations": {
+			"list": [{
+				"builtIn": 1,
+				"datasource": "-- Grafana --",
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			}]
+		},
+		"editable": true,
+		"gnetId": null,
+		"graphTooltip": 0,
+		"id": null,
+		"links": [],
+		"panels": [{
+			"aliasColors": {},
+			"bars": false,
+			"dashLength": 10,
+			"dashes": false,
+			"datasource": "prometheus",
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"fill": 1,
+			"fillGradient": 0,
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 0,
+				"y": 0
+			},
+			"hiddenSeries": false,
+			"id": 2,
+			"legend": {
+				"avg": false,
+				"current": false,
+				"max": false,
+				"min": false,
+				"show": true,
+				"total": false,
+				"values": false
+			},
+			"lines": true,
+			"linewidth": 3,
+			"nullPointMode": "null",
+			"options": {
+				"alertThreshold": true
+			},
+			"percentage": false,
+			"pluginVersion": "7.5.4",
+			"pointradius": 2,
+			"points": false,
+			"renderer": "flot",
+			"seriesOverrides": [],
+			"spaceLength": 10,
+			"stack": false,
+			"steppedLine": false,
+			"targets": [{
+				"exemplar": true,
+				"expr": "node_memory_Active_bytes{instance=\"compute1\"}/node_memory_MemTotal_bytes{instance=\"compute1\"}*100",
+				"interval": "1m",
+				"legendFormat": "TANDEM Node 1 Memory Consumption  - Total Memory : 32 GB",
+				"refId": "A"
+			}],
+			"thresholds": [],
+			"timeFrom": null,
+			"timeRegions": [],
+			"timeShift": null,
+			"title": "TANDEM Node 1 Memory Consumption",
+			"tooltip": {
+				"shared": true,
+				"sort": 0,
+				"value_type": "individual"
+			},
+			"type": "graph",
+			"xaxis": {
+				"buckets": null,
+				"mode": "time",
+				"name": null,
+				"show": true,
+				"values": []
+			},
+			"yaxes": [{
+				"format": "percent",
+				"label": "Utilizatiion",
+				"logBase": 1,
+				"max": null,
+				"min": null,
+				"show": true
+			}, {
+				"format": "short",
+				"label": null,
+				"logBase": 1,
+				"max": null,
+				"min": null,
+				"show": true
+			}],
+			"yaxis": {
+				"align": false,
+				"alignLevel": null
+			}
+		}, {
+			"aliasColors": {},
+			"bars": false,
+			"dashLength": 10,
+			"dashes": false,
+			"datasource": "prometheus",
+			"fieldConfig": {
+				"defaults": {},
+				"overrides": []
+			},
+			"fill": 3,
+			"fillGradient": 0,
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 12,
+				"y": 0
+			},
+			"hiddenSeries": false,
+			"id": 8,
+			"legend": {
+				"avg": false,
+				"current": false,
+				"max": false,
+				"min": false,
+				"show": true,
+				"total": false,
+				"values": false
+			},
+			"lines": true,
+			"linewidth": 1,
+			"nullPointMode": "null",
+			"options": {
+				"alertThreshold": true
+			},
+			"percentage": false,
+			"pluginVersion": "7.5.4",
+			"pointradius": 2,
+			"points": false,
+			"renderer": "flot",
+			"seriesOverrides": [],
+			"spaceLength": 10,
+			"stack": false,
+			"steppedLine": false,
+			"targets": [{
+				"exemplar": true,
+				"expr": "100-avg(rate(node_cpu_seconds_total{instance=\"compute1\",mode=\"idle\"}[5m]))*100",
+				"interval": "1m",
+				"legendFormat": "Node 1 CPU Consumption - Total CPU vCores :  12",
+				"refId": "A"
+			}],
+			"thresholds": [],
+			"timeFrom": null,
+			"timeRegions": [],
+			"timeShift": null,
+			"title": " Node 1 CPU Consumption",
+			"tooltip": {
+				"shared": true,
+				"sort": 0,
+				"value_type": "individual"
+			},
+			"type": "graph",
+			"xaxis": {
+				"buckets": null,
+				"mode": "time",
+				"name": null,
+				"show": true,
+				"values": []
+			},
+			"yaxes": [{
+				"format": "percent",
+				"label": "Utilization",
+				"logBase": 1,
+				"max": null,
+				"min": null,
+				"show": true
+			}, {
+				"format": "short",
+				"label": null,
+				"logBase": 1,
+				"max": null,
+				"min": null,
+				"show": true
+			}],
+			"yaxis": {
+				"align": false,
+				"alignLevel": null
+			}
+		}],
+		"refresh": "1m",
+		"schemaVersion": 27,
+		"style": "dark",
+		"tags": [],
+		"templating": {
+			"list": []
+		},
+		"time": {
+			"from": "now-3h",
+			"to": "now"
+		},
+		"timepicker": {},
+		"timezone": "",
+		"title": "Infrastructure Metrics",
+		"uid": "pi-edge-i",
+		"version": 2
+	},
+	"overwrite": true,
+	"inputs": [],
+	"folderId": 0
+}

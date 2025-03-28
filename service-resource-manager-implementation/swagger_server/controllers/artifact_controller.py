@@ -3,7 +3,7 @@ import json
 import connexion
 from swagger_server.models.copy_artifact_model import CopyArtifactModel
 from swagger_server.models.artifact_exists_model import ArtifactExistsModel
-from swagger_server.services import artifact_service
+from swagger_server.utils import artifact_connector
 
 def artifact_exists(body):
     if connexion.request.is_json:
@@ -13,7 +13,7 @@ def artifact_exists(body):
                 return 'The registyr url must be provided', 400
             if artifact.image_name is None:
                 return 'Image name must be provided', 400
-            response = artifact_service.artifact_exists(artifact)
+            response = artifact_connector.artifact_exists(artifact)
             return response
         except Exception as e:
             logging.error(e.args)
@@ -29,7 +29,7 @@ def copy_artifact(body):
                 return 'The source and destination registries must be provided', 400
             if artifact.src_image_name is None:
                 return 'The image name must be provided', 400
-            response = artifact_service.copy_artifact(artifact)
+            response = artifact_connector.copy_artifact(artifact)
             return response
         except Exception as e:
             logging.error(e.args)

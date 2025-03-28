@@ -1,0 +1,24 @@
+{
+
+  "name": "Temp_and_Humidity_sensor_cluster_01",
+  "description": "Raspberry Pi sensor cluster",
+  "adminState": "unlocked",
+  "operatingState": "enabled",
+  "protocols": {
+    "example": {
+        "host": "dummy",
+        "port": "1234",
+        "unitID": "1"
+    }
+  },
+  "labels": [
+  "DHT11"
+  ],
+  "location": "Peania",
+  "service": {
+    "name": "edgex-device-rest"
+  },
+  "profile": {
+    "name": "SensorCluster"
+  }
+}

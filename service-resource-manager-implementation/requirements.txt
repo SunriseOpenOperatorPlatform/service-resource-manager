@@ -1,13 +1,36 @@
 #connexion >= 2.6.0
+#connexion[swagger-ui] >= 2.6.0
+#python_dateutil == 2.6.0
+#setuptools >= 21.0.0
+#swagger-ui-bundle >= 0.0.2
+#requests
+#pymongo
+#logging
+#traceback
+#pprint
+
+#connexion >= 2.6.0
+#connexion == 2.5.0 used in python 3.5 running server for dev
+#connexion #for test
 connexion[swagger-ui]
 python_dateutil == 2.6.0
 setuptools >= 21.0.0
-swagger-ui-bundle >= 0.0.2
-python-dotenv == 1.0.1
+#setuptools==50.3.2
 pymongo==3.12.0
 #git+https://github.com/kubernetes-client/python.git
 requests==2.25.1
+#kubernetes==17.17.0
+kubernetes==18.20.0
+
+python-jose[cryptography]
+cffi==1.15.1
+#bcrypt
+bcrypt==3.1.7 #used in python 3.5 running server for dev
 
 psycopg2-binary
+#psycopg2==2.7.7 #used in python 3.5 running server for dev
 
+#not used!
+#pandas==0.24.2
+paramiko>=2.12.0
 urllib3

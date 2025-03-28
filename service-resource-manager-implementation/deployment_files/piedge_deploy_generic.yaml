@@ -272,3 +272,121 @@ spec:
     - port: 5432 # Sets port to run the postgres application
   selector:
     app: postgres
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ccm  # Sets Deployment name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ccm
+  template:
+    metadata:
+      labels:
+        app: ccm
+    spec:
+      containers:
+        - name: ccm
+          image: postgres:10.1 # Sets Image
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5000  # Exposes container port
+          env:
+          - name: KUBERNETES_MASTER_HOSTNAME
+              #example value
+              value: "tanmaster"
+# GNNs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gnn-inference
+ # namespace: default  # The desired namespace for the CRD
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gnn-inference
+  template:
+    metadata:
+      labels:
+        app: gnn-inference
+    spec:
+      containers:
+      - name: gnn-inference
+        image: piedge/gnn-inference
+        imagePullPolicy: Always
+        env:
+        - name: NAMESPACE
+          value: "default" # namsepace where netma config map is e.g. "default"
+        - name: GNN_MODELS_PATH
+          value: "/mnt/path" # path where trained_models folder is e.g. "/mnt/path"
+        - name: GNN_OUTPUT
+          value: "/mnt/path/output" # path where GNNs output files should be written e.g. "/mnt/path/output"
+        ports:
+        - name: app
+          containerPort: 5000
+          protocol: TCP
+        volumeMounts:
+            - mountPath: /mnt/path
+              name: gnn-models-volume
+            - mountPath: /mnt/path/output
+              name: forecasts-volume
+      volumes:
+        - name: gnn-models-volume
+          hostPath:
+            path: ./trained_models #define absolute path to the trained_models folder
+        - name: forecasts-volume
+          hostPath:
+            path: ./gnn_models #define absolute path to which the forecasts.csv files should be written
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnn-inference-service
+  labels:
+    app: gnn-inference
+spec:
+  type: NodePort
+  ports:
+  - port: 32000
+  selector:
+    app: gnn-inference
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gnn-controller
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gnn-controller
+  template:
+    metadata:
+      labels:
+        app: gnn-controller
+    spec:
+      containers:
+        - name: gnn-controller
+          image: piedge/gnn-control
+          imagePullPolicy: Always
+          env:
+          - name: DATA_PATH
+            value: "/mnt/path/data_dp.csv"
+          - name: NAMESPACE
+            value: "default"
+          volumeMounts:
+            - mountPath: /mnt/path
+              name: gzorro-volume
+      volumes:
+        - name: gzorro-volume
+          hostPath:
+            path: ./synthetic-data-generator/data-extractor

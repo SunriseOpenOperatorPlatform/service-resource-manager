@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: meclocation
+  name: meclocation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: meclocation
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: meclocation
+    spec:
+      nodeSelector:
+        location1: Peania_Athens_19002
+      containers:
+        - env:
+#            - name: KUBERNETES_MASTER_HOST
+#              #example value
+#              value: https://146.124.106.179:16443 #
+#            - name: KUBERNETES_MASTER_TOKEN
+#               #example value
+#              value: b3lIOWFQM3NUTWJpSUVBMDNGNmlmVG4wQkd5dXFmWTdFUlFWQVo3UnEycz0K
+            - name: EMP_STORAGE_URI
+              value: mongodb://mongoemp:27017
+          image: nikospsar/pi_edge_mec:1.0.0
+          name: meclocation
+          ports:
+            - containerPort: 8080
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: meclocation
+  name: meclocation
+spec:
+  type: NodePort
+  ports:
+    - name: "8080"
+      nodePort: 32500
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: meclocation
+status:
+  loadBalancer: {}

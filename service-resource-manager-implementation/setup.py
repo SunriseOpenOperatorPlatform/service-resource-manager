@@ -21,10 +21,10 @@ REQUIRES = [
 setup(
     name=NAME,
     version=VERSION,
-    description="Service Resource Manager Controller API",
-    author_email="dlaskaratos@intracom-telecom.com",
+    description="π-edge Controller API",
+    author_email="nikpsarom@intracom-telecom.com",
     url="",
-    keywords=["Swagger", "service resource manager API"],
+    keywords=["Swagger", "pi-edge Controller API"],
     install_requires=REQUIRES,
     packages=find_packages(),
     package_data={'': ['swagger/swagger.yaml']},

@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Service Resource Manager
+  title: SRM Controller API
   description: |
-    API exposed by SRM for testbed resource acquisition
+    API exposed by SRM for "PaaS" - based interaction with NFV MANO.
   termsOfService: http://swagger.io/terms/
   contact:
     email: dlaskaratos@intracom-telecom.com
@@ -14,45 +14,65 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-- url: http://virtualserver:8080/0.0.1
+- url: http://vitrualserver:8080/piedge-connector/2.0.0
 paths:
-  /edge-nodes:
-    get:
-      tags:
-      - Availability zones
-      summary: Retrieve Edge Platform nodes
-      operationId: get_edge_platform_nodes
-      responses:
-        "200":
-          description: List of nodes
-      x-openapi-router-controller: swagger_server.controllers.nodes_controller
-  /appinstances:
+#   /authentication:
+#     post:
+#       tags:
+#       - Login
+#       summary: Login with a username and password.
+#       operationId: authentication_login
+#       requestBody:
+#         description: Registration method to login
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/LoginRegistrationRequest'
+#       responses:
+#         "200":
+#           description: A JSON Web Token (JWT).
+#         "401":
+#           description: Incorrect username or password.
+#       x-openapi-router-controller: swagger_server.controllers.login_controller
+  /helm:
     post:
-       tags:
-       - App Instances
-       summary: Installs a helm chart on the edge cloud platform
-       operationId: deploy_app
-       requestBody:
+      tags:
+      - Helm Chart Operations
+      summary: Install a helm chart
+      operationId: install_helm_chart
+      requestBody:
         description: Request to install a helm chart
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/HelmChartInstall'
-       responses:
-         "200":
-           description: Helm chart sucessfully installed
-         "400":
-           description: Necessary fields missing
-       x-openapi-router-controller: swagger_server.controllers.app_instance_controller
-    get:
-      tags:
-      - App Instances
-      summary: Instantiates an application specification
-      operationId: get_app_instances
       responses:
-         "200":
-           description: App instances successfully retrieved
-      x-openapi-router-controller: swagger_server.controllers.app_instance_controller
+        "200":
+          description: Helm chart installed
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.operations_controller
+  /helm/{name}:
+    delete:
+      tags:
+      - Helm Chart Operations
+      summary: Uninstall helm chart.
+      operationId: uninstall_helm_chart
+      parameters:
+      - name: name
+        in: path
+        description: Uninstalls a helm chart by name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Helm chart uninstalled
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.operations_controller
   /copy-artifact:
     post:
       tags:
@@ -88,9 +108,1442 @@ paths:
           description: Artifact does not exist
         "400":
           description: Mandatory fields missing        
-      x-openapi-router-controller: swagger_server.controllers.artifact_controller        
+      x-openapi-router-controller: swagger_server.controllers.artifact_controller   
+  /serviceFunction:
+    post:
+      tags:
+      - Service Functions Catalogue
+      summary: Register Service.
+      security:
+        - jwt: [ ]
+      operationId: register_service_function
+      requestBody:
+        description: Registration method to save service function into database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceFunctionRegistrationRequest'
+      responses:
+        "200":
+          description: Service function registered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
+    patch:
+      tags:
+      - Service Functions Catalogue
+      summary: Update Service registration.
+      security:
+        - jwt: [ ]
+      operationId: update_service_function
+      requestBody:
+        description: Registration method to update service function into database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceFunctionRegistrationRequest'
+      responses:
+        "200":
+          description: Service registered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
+    get:
+      tags:
+      - Service Functions Catalogue
+      summary: Returns service functions from the catalogue.
+      operationId: get_service_functions
+      security:
+        - jwt: [ ]
+      responses:
+        "200":
+          description: Returns service functions from the catalogue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/appsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
+  /serviceFunction/{serviceFunctionName}:
+    delete:
+      tags:
+      - Service Functions Catalogue
+      summary: Deregister service.
+      security:
+        - jwt: [ ]
+      operationId: deregister_service_function
+      parameters:
+      - name: serviceFunctionName
+        in: path
+        description: Returns a  specific service function from the catalogue.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Service function unregistered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
+    get:
+      tags:
+      - Service Functions Catalogue
+      summary: Returns a specific service function from the catalogue.
+      security:
+        - jwt: [ ]
+      operationId: get_service_function
+      parameters:
+      - name: serviceFunctionName
+        in: path
+        description: Returns a  specific service function from the catalogue.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the service function info status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/appsResponse_apps'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
+  /paasService:
+    post:
+      tags:
+      - PaaS Services Catalogue
+      summary: Register PaaS.
+      security:
+        - jwt: [ ]
+      operationId: register_paas
+      requestBody:
+        description: Registration method to save paas service into database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaasRegistrationRequest'
+      responses:
+        "200":
+          description: Paas service registered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+    patch:
+      tags:
+      - PaaS Services Catalogue
+      summary: Update PaaS registration.
+      operationId: update_paas
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: Registration method to update paas service into database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaasRegistrationRequest'
+      responses:
+        "200":
+          description: Paas service registered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+    get:
+      tags:
+      - PaaS Services Catalogue
+      summary: Returns PaaS Services from the catalogue.
+      security:
+        - jwt: [ ]
+      operationId: get_paas_services
+      responses:
+        "200":
+          description: Returns PaaS Services from the catalogue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/appsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
+  /paasService/{paasServiceName}:
+    delete:
+      tags:
+      - PaaS Services Catalogue
+      summary: Deregister PaaS.
+      operationId: deregister_paas
+      security:
+        - jwt: [ ]
+      parameters:
+      - name: paasServiceName
+        in: path
+        description: Returns a  specific paas service from the catalogue.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Paas service unregistered
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+    get:
+      tags:
+      - PaaS Services Catalogue
+      summary: Returns a specific PaaS service from the catalogue.
+      security:
+        - jwt: [ ]
+      operationId: get_paas_service
+      parameters:
+      - name: paasServiceName
+        in: path
+        description: Returns a specific PaaS service from the catalogue.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the paas info status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/appsResponse_apps'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
+  /deployedPaas:
+    get:
+      tags:
+      - PaaS Services Instances
+      summary: Returns edge paas services status.
+      security:
+        - jwt: [ ]
+      operationId: deployed_paas_services_status
+      responses:
+        "200":
+          description: Returns the edge PaaS services status per node.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deployedappsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+    post:
+      tags:
+      - PaaS Services Instances
+      summary: Request to deploy a PaaS (from the catalogue) to an edge node.
+      security:
+        - jwt: [ ]
+      operationId: deploy_paas
+      requestBody:
+        description: Deploy PaaS.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployPaas'
+      responses:
+        "200":
+          description: App deployed.
+      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+    patch:
+      tags:
+      - PaaS Services Instances
+      summary: Request to update the status of a deployed PaaS.
+      security:
+        - jwt: [ ]
+      operationId: update_deployed_paas
+      requestBody:
+        description: update a running paas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployChain'
+      responses:
+        "200":
+          description: App updated.
+      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+  /deployedPaas/{deployedPaasServiceName}:
+    delete:
+      tags:
+      - PaaS Services Instances
+      summary: Deletes a deployed PaaS service.
+      security:
+        - jwt: [ ]
+      operationId: delete_deployed_paas_service
+      parameters:
+      - name: deployedPaasServiceName
+        in: path
+        description: Represents a paas  from the running deployments.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deployed app deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+    get:
+      tags:
+      - PaaS Services Instances
+      summary: Returns the requested edge paas service status.
+      security:
+        - jwt: [ ]
+      operationId: deployed_paas_service_status
+      parameters:
+      - name: deployedPaasServiceName
+        in: path
+        description: Represents a paas  from the running deployments.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the status of the deployed app.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deployedappsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller    
+  /deployedServiceFunction/chain:
+    post:
+      tags:
+      - Service Functions Instances
+      summary: Request to deploy a chain of function services.
+      security:
+        - jwt: [ ]
+      operationId: deploy_chain
+      requestBody:
+        description: Deploy chain.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployChain'
+      responses:
+        "200":
+          description: App deployed.
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+    patch:
+      tags:
+      - Service Functions Instances
+      summary: Request to update a chain of function services.
+      operationId: update_chain
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: Deploy chain.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployChain'
+      responses:
+        "200":
+          description: App deployed.
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+  /deployedServiceFunction/chain/{chainServiceName}:    
+    delete:
+      tags:
+      - Service Functions Instances
+      summary: Deletes a deployed chain.
+      security:
+        - jwt: [ ]
+      operationId: delete_chain
+      parameters:
+      - name: chainServiceName
+        in: path
+        description: Represents a chain Service  from the running deployments.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deployed chain deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller  
+  /initNodes:
+    get:
+      tags:
+      - Nodes
+      summary: Initiliaze nodes. Scan nodes in the edge cluster.
+      security:
+        - jwt: [ ]
+      operationId: init_nodes
+      responses:
+        "200":
+          description: Nodes initialized
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /activateTandemNode:
+    post:
+      tags:
+      - Nodes
+      summary: Request to create a "PaaS-enabled" node.
+      operationId: activate_paas_node
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: activate TANDEM node.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployPaaSNode'
+      responses:
+        "200":
+          description: Node activated.
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /node:
+    get:
+      tags:
+      - Nodes
+      summary: Returns the edge nodes status.
+      # security:
+      #   - jwt: [ ]
+      operationId: get_nodes
+      responses:
+        "200":
+          description: Returns the edge nodes status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nodesResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+    post:
+      tags:
+      - Nodes
+      summary: Request to add a node into the cluster.
+      operationId: add_node
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: Add node to cluster using ssh credentials.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addNode'
+      responses:
+        "200":
+          description: Node added.
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller  
+  /node/{nodeName}:
+    get:
+      tags:
+      - Nodes
+      summary: Returns info of a specific edge node.
+      security:
+        - jwt: [ ]
+      operationId: get_node_info
+      parameters:
+      - name: nodeName
+        in: path
+        description: Returns info of a specific edge node.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the service function info status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nodesResponse' #need update!!!!
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+    # delete:
+    #   tags:
+    #   - Nodes
+    #   summary: Request to remove a node from the cluster.
+    #   operationId: remove_node
+    #   parameters:
+    #   - name: nodeName
+    #     in: path
+    #     description: Removes node from cluster.
+    #     required: true
+    #     style: simple
+    #     explode: false
+    #     schema:
+    #       type: string
+    #   - name: force
+    #     in: query
+    #     description: Removes node from cluster.
+    #     required: false
+    #     schema:
+    #       type: boolean
+    #   security:
+    #     - jwt: [ ]
+    #   responses:
+    #     "200":
+    #       description: Node Deleted.
+    #   x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /deleteNode:
+    post:
+      tags:
+      - Nodes
+      summary: Request to remove a node from the cluster.
+      operationId: remove_node
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: Add node to cluster using ssh credentials.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addNode'
+      responses:
+        "200":
+          description: Node Deleted.
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /targets:
+    get:
+      tags:
+      - Nodes
+      summary: Returns IP of all nodes for Prometheus.
+      operationId: prometheus_targets
+      responses:
+        "200":
+          description: Returns the targets for Prometheus service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nodesResponse'
+        "405":
+          description: Method not allowed        
+      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  /deployedServiceFunction:
+    post:
+      tags:
+      - Service Functions Instances
+      summary: Request to deploy a Service function (from the catalogue) to an edge
+        node.
+      operationId: deploy_service_function
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: Deploy Service Function.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployServiceFunction'
+      responses:
+        "200":
+          description: App deployed.
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+    get:
+      tags:
+      - Service Functions Instances
+      summary: Returns the edge service functions status per node.
+      operationId: deployed_service_functions_status
+      security:
+        - jwt: [ ]
+      responses:
+        "200":
+          description: Returns the edge service functions status per node.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deployedappsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+    patch:
+      tags:
+      - Service Functions Instances
+      summary: Request to update the status of a service.
+      operationId: update_deployed_service_function
+      security:
+        - jwt: [ ]
+      requestBody:
+        description: update a running service function.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deployServiceFunction'
+      responses:
+        "200":
+          description: App updated.
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller  
+  /deployedServiceFunction/{deployedServiceFunctionName}:
+    get:
+      tags:
+      - Service Functions Instances
+      summary: Returns the requested edge service status per node.
+      operationId: deployed_service_function_status
+      security:
+        - jwt: [ ]
+      parameters:
+      - name: deployedServiceFunctionName
+        in: path
+        description: Represents a  service function  from the running deployments
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the requested edge service function status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deployedappsResponse'
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+    delete:
+      tags:
+      - Service Functions Instances
+      summary: Deletes a deployed Service function.
+      operationId: delete_deployed_service_function
+      security:
+        - jwt: [ ]
+      parameters:
+      - name: deployedServiceFunctionName
+        in: path
+        description: Represents a service function from the running deployments.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deployed service function  deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+  /securedSlice:
+    post:
+      tags:
+      - Security Automation
+      summary: Enables a secured slice
+      security:
+        - jwt: [ ]
+      operationId: activate_secured_slice
+      requestBody:
+        description: Creates a secured slice
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activateSecuredSlice'
+      responses:
+        "200":
+          description: Deployed chain deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.security_automation_controller
+  /securedSlice/{sliceName}:
+    delete:
+      tags:
+      - Security Automation
+      summary: Disables security monitoring over a slice
+      security:
+        - jwt: [ ]
+      operationId: delete_secured_slice
+      parameters:
+      - name: sliceName
+        in: path
+        description: Represents a slice from the running slices.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deployed chain deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.security_automation_controller
+
+  /addIotDevice:
+    post:
+      tags:
+        - IoT Devices
+      summary: Adds an IoT Device
+      security:
+        - jwt: [ ]
+      operationId: add_iot_device
+      requestBody:
+        description: Adds an IoT Device
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addIotDevice'
+      responses:
+        "200":
+          description: Deployed chain deleted
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.iot_devices_controller
+
+  /serviceFunctionNodeMigration:
+    post:
+      tags:
+      - Node Migration
+      summary: Migrates service function from one node to another
+      security:
+        - jwt: []
+      operationId: service_function_node_migration
+      requestBody:
+        description: Migrates service function from one node to another
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/serviceFunctionNodeMigration'
+      responses:
+        "200":
+          description: Service function migrated successfully
+        "405":
+          description: Method not allowed
+      x-openapi-router-controller: swagger_server.controllers.node_migration_controller
+
+
 components:
   schemas:
+    serviceFunctionNodeMigration:
+      type: object
+      properties:
+        service_function_instance_name:
+          type: string
+          example: mongo-test
+        destination_location:
+          type: string
+          example: Peania_room
+    HelmChartInstall:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: http://helm.chart.net/helm.yaml
+        deployment_name:
+          type: string
+          example: test_helm
+        repo_username:
+          type: string
+          example: test1
+        repo_password:
+          type: string
+          example: test1      
+    iotValue:
+      type: object
+      properties:
+        name:
+          type: string
+          example: temperature
+        description:
+          type: string
+          example: Ambient temperature in Celsius
+        type:
+          type: string
+          example: Int64
+        min:
+          type: integer
+          example: 0
+        max:
+          type: integer
+          example: 100
+    addIotDevice:
+      type: object
+      properties:
+        device_name:
+          type: string
+          example: Temp_and_Humidity_sensor_cluster_01
+        description:
+          type: string
+          example: Raspberry Pi sensor cluster
+        device_cluster:
+          type: string
+          example: EnviromentSensorCluster
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+              example: Peania 19027
+            lat:
+              type: number
+              example: 37.9553
+            long:
+              type: number
+              example: 23.8522
+        values:
+          type: array
+          items:
+            items:
+            $ref: '#/components/schemas/iotValue'
+    activateSecuredSlice:
+      type: object
+      properties:
+        slice_name:
+          type: string
+          example: icom_slice_1
+        service_functions_names:
+          type: array
+          items:
+            type: string
+    LoginRegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          example: admin@ICOM_123!
+    PaasDeregistrationRequest:
+      type: object
+      properties:
+        paas_service_name:
+          type: string
+          example: paas_apache_gw
+    ServiceFunctionDeregistrationRequest:
+      type: object
+      properties:
+        service_function_name:
+          type: string
+          example: edgex-core-data
+    appDelete:
+      type: object
+      properties:
+        paas_service_name:
+          type: string
+          example: paas_apache_gw
+    chainDelete:
+      type: object
+      properties:
+        chain_service_name:
+          type: string
+          example: chain_apaches_gws
+    PaasRegistrationRequest:
+      type: object
+      properties:
+        paas_service_name:
+          type: string
+          example: Support-Security-Services
+        # paas_service_policy:
+        #   type: string
+        #   example: maximize-performance
+        service_functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceFunctionintoPaaS'
+    PaasCatalogueResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 62b9d91e309c931b320040fe
+        paas_service_name:
+          type: string
+          example: Support-Security-Services
+        service_functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceFunctionintoPaaS'
+    PaassCatalogueResponse:
+      type: array
+      items:
+            $ref: '#/components/schemas/PaasCatalogueResponse'
+    ServiceFunctionintoPaaS:
+      type: object
+      properties:
+        service_function_identifier_name:
+          type: string
+        volume_mounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/volume_mount_deploy'
+        autoscaling_metric:
+          type: string
+        env_parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/env_parameters'
+      example:
+      - service_function_identifier_name: ElasticSearch
+        volume_mounts:
+        - storage: 500Mi
+          name: volume1
+
+
+        autoscaling_metric: cpu
+      - service_function_identifier_name: Kibana
+        autoscaling_metric: memory
+        env_parameters:
+         - name: ESTASTICSEARCH_URL
+           value: http://Elasticname:..... INTKUBEDNS
+    ServiceFunctionRegistrationRequest:
+      type: object
+      properties:
+        service_function_name:
+          type: string
+          example: Kibana
+        service_function_image:
+          type: string
+          example: kibana:7.15.2
+        service_function_type:
+          type: string
+          example: Container
+        application_ports:
+          type: array
+          example:
+          - 5601
+          items:
+            type: integer
+        autoscaling_policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/autoscaling_policy'
+        required_volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/volume'
+        required_env_parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/env_parameter_name'
+        privileged:
+          type: boolean
+          example: false
+
+    eopRegistrationResponse:
+      type: object
+      properties:
+        eopName:
+          type: string
+        eopType:
+          type: string
+          example: openness
+        registrationStatus:
+          type: string
+        serviceConsumerId:
+          type: string
+      example:
+        eopType: openness
+        registrationStatus: registrationStatus
+        serviceConsumerId: serviceConsumerId
+        eopName: eopName
+    autoscaling_policy_metric:
+      type: object
+      properties:
+        metric:
+          example: cpu
+          type: string
+        limit:
+          type: string
+          example: 1000m
+        request:
+          type: string
+          example: 600m
+        util_percent:
+          type: number
+          example: 60
+        is_default:
+          type: boolean
+          example: true
+    autoscaling_policy:
+      type: object
+      properties:
+        policy:
+          type: string
+          example: maximize-performance
+        monitoring_metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/autoscaling_policy_metric'
+    autoscaling_policy_array:
+      type: array
+      items:
+        $ref: '#/components/schemas/autoscaling_policy'
+    volume:
+      type: object
+      properties:
+        name:
+          type: string
+          example: volumeconfig
+        path:
+          type: string
+          example: /data/config
+        hostpath:
+          type: string
+          example: /data/config
+    env_parameter_name:
+      type: object
+      properties:
+        name:
+          type: string
+      example:
+        name: ELASTICSEARCH_URL
+    env_parameters:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        value_ref:
+          type: string
+      example:
+        name: ELASTICSEARCH_URL
+        value: http://elasticsearch:9200
+    servicesQuery:
+      type: object
+      properties:
+        serviceConsumerId:
+          type: string
+        queryString:
+          type: string
+    nodesResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: openness
+        location:
+          type: string
+        serial:
+          type: string
+        node_type:
+          type: string
+      example:
+        serial: 146.124.106.179
+        name: compute1
+        location: Peania_19002_Athens
+        id: 237d11c4-aca6-4845-9538-ba7b3e89c0b6
+        node_type: server
+    appsResponse:
+      type: object
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/appsResponse_apps'
+      example:
+        apps:
+        - id: id
+        - id: id
+    volume_mount_deploy:
+      type: object
+      properties:
+          name:
+            type: string
+            example: volume1
+          storage:
+            type: string
+            example: 100Mi
+    serviceFunctionIndex:
+      type: object
+      properties:
+          service_function_name:
+            type: string
+            example: mongodb
+          service_function_index:
+            type: integer
+            example: 2
+    deployServiceFunction:
+      type: object
+      properties:
+        service_function_name:
+          type: string
+          example: mongodb
+        service_function_instance_name:
+          type: string
+          example: mondodb_for_IoT_App
+        volume_mounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/volume_mount_deploy'
+        autoscaling_metric:
+          type: string
+          example: cpu
+        autoscaling_policy:
+          type: string
+          example: minimize_cost
+        count_min:
+          type: integer
+          example: 1
+        count_max:
+          type: integer
+          example: 3
+        location:
+          type: string
+          example: Peania_Athens_node1
+        all_node_ports:
+          type: boolean
+          example: false
+        monitoring_services:
+          type: boolean
+          example: false
+        node_ports:
+          type: array
+          items:
+            type: integer
+          example:
+          - 90
+          - 8080
+        env_parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/env_parameters'
+    deployPaas:
+      type: object
+      properties:
+        paas_service_name:
+          type: string
+          example: EdgeX
+        paas_instance_name:
+          type: string
+          example: Edgex_ICOM_deployment
+        # autoscaling_metric:
+        #   type: string
+        #   example: memory
+        autoscaling_type:
+          type: string
+          example: maximize_performance
+        data_space_enabled:
+          type: boolean
+          example: true
+        count_min:
+          type: integer
+          example: 1
+        count_max:
+          type: integer
+          example: 5
+        location:
+          type: string
+          example: Peania_Athens_node1
+        all_node_ports:
+          type: boolean
+          example: false
+        monitoring_services:
+          type: boolean
+          example: false
+        node_ports:
+          type: array
+          items:
+            type: integer
+          example:
+          - 90
+          - 8080
+    addNode:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Node_1
+        hostname:
+          type: string
+          example: ubuntu
+        ip:
+          type: string
+          example: ubuntu
+        password:
+          type: string
+          example: 12fe43!!@
+        location:
+          type: string
+          example: Koropi_Athens_19400
+        node_type:
+          type: string
+          example: server
+    removeNode:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Node_1
+        hostname:
+          type: string
+          example: ubuntu
+        ip:
+          type: string
+          example: ubuntu
+        password:
+          type: string
+          example: 12fe43!!@
+    deployPaaSNode:
+      type: object
+      properties:
+        node_name:
+          type: string
+          example: Node_1
+        location:
+          type: string
+          example: Peania_Athens
+        paas_services:
+          type: array
+          items:
+            $ref: '#/components/schemas/deployPaas'
+    deployChain:
+      type: object
+      properties:
+        chain_service_function_instance_name:
+          type: string
+        chain_service_function_order:
+          type: array
+          items:
+            $ref: '#/components/schemas/serviceFunctionIndex'
+        service_functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/deployServiceFunction'
+    appupdate:
+      type: object
+      properties:
+        command:
+          type: string
+    eopD_configurability:
+      type: object
+      properties:
+        foo:
+          type: string
+      example:
+        foo: foo
+    eopD_paasServices:
+      type: object
+      properties:
+        paasName:
+          type: string
+        paasType:
+          type: string
+          example: generic
+        scaleOut:
+          type: boolean
+        configurability:
+          $ref: '#/components/schemas/eopD_configurability'
+      example:
+        paasName: paasName
+        scaleOut: true
+        configurability:
+          foo: foo
+        paasType: generic
+    eopD_interconnectivitySupport:
+      type: object
+      properties:
+        tunnelling:
+          type: string
+          enum:
+          - gre
+          - vxlan
+          - gtp_u
+      example:
+        tunnelling: gre
+    eopD_kpis:
+      type: object
+      properties:
+        availability:
+          type: string
+        latency:
+          type: string
+      example:
+        latency: latency
+        availability: availability
+    eopRegistrationRequest_eopAuthCredentials:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    k8sRegistrationRequest_eopAuthCredentials:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        token:
+          type: string
+    appsResponse_apps:
+      type: object
+      properties:
+        id:
+          type: string
+      example:
+        id: id
+    PaasRegistrationRequest_autoscaling_policies:
+      type: object
+      properties:
+        metric:
+          type: string
+        limit:
+          type: string
+        request:
+          type: string
+        util_percent:
+          type: number
+    deployedappsResponse:
+      type: object
+      properties:
+        nodeid:
+          type: string
+        nodename:
+          type: string
+        paasid:
+          type: string
+        paasname:
+          type: string
+        status:
+          type: string
+        exposedports:
+          type: array
+          items:
+            type: integer
+      example:
+        paasname: paasname
+        nodename: nodename
+        exposedports:
+        - 0
+        - 0
+        nodeid: nodeid
+        paasid: paasid
+        status: status
+    deployedappsResponse_apps:
+      type: array
+      items:
+        $ref: '#/components/schemas/deployedappsResponse'
+    genericResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        object:
+          type: object
+    swarmInfo:
+      type: object
+      properties:
+        ID:
+          type: string
+        Version:
+          type: object
+        CreatedAt:
+          type: string
+        UpdatedAt:
+          type: string
+        Spec:
+          type: object
+    swarmInitModel:
+      type: object
+      properties:
+        listen_addr:
+          type: string
+        adv_addr:
+          type: string
+        subnet_size:
+          type: integer
+        default_addr_pool:
+          type: array
+          items:
+            type: string
+        data_path_port:
+          type: integer
+        force_new_cluster:
+          type: boolean
+      example:
+        listen_addr: 0.0.0.0:2377
+        adv_addr: 192.168.1.1:2377
+        subnet_size: 24
+        default_addr_pool:
+        - 10.10.0.0/8
+        - 20.20.0.0/8
+        data_path_port: 4789
+        force_new_cluster: false
+    joinNodeModel:
+      type: object
+      properties:
+         listen_addr:
+           type: string
+         adv_addr:
+           type: string
+         remote_addr:
+           type: array
+           items:
+             type: string
+         join_token:
+           type: string
+      example:
+        listen_addr: 0.0.0.0:2377
+        adv_addr: 192.168.1.1:2377
+        remote_addr:
+        - 192.168.1.2:2377
+        join_token: SWMTKN-1-2us7px3tok5sasovwyiszku26v4b3ne437anvacpksgf0d91c8-7r4boxw9obe2k8qz5czejfotn
+    createServiceModel:
+      type: object
+      properties:
+        image:
+          type: string
+        name:
+          type: string
+        env:
+          type: array
+          items:
+            type: string
+        networks:
+          type: array
+          items:
+            type: string
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/createServicePortsConfig'
+      example:
+        image: "mongo:4.4.18"
+        name: "mongodb"
+        env:
+        - "HTTP_PROXY=http://icache.intracomtel.com:80"
+        - "HTTPS_PROXY=http://icache.intracomtel.com:80"
+        networks:
+        - "bricks-nw"
+        ports:
+        - name: "port1"
+          protocol: "tcp"
+          target_port: 8080
+          published_port: 8080
+          publish_mode: "host"
+    createServicePortsConfig:
+      type: object
+      properties:
+        name:
+          type: string
+        protocol:
+          type: string
+        target_port:
+          type: integer
+        published_port:
+          type: integer
+        publish_mode:
+          type: string
+      example:
+        name: string
+        protocol: "tcp"
+        target_port: 8080
+        published_port: 8080
+        publish_mode: "host"
     HelmChartInstall:
       type: object
       properties:
@@ -156,4 +1609,26 @@ components:
           example: user123
         password:
           type: string
-          example: 1234      
+          example: 1234    
+
+  securitySchemes:
+    registry_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://serviceregistry.swagger.io/oauth/dialog
+          scopes:
+            write:services: modify services in your account
+            read:services: read your services
+      x-tokenInfoFunc: swagger_server.controllers.authorization_controller.check_registry_auth
+      x-scopeValidateFunc: swagger_server.controllers.authorization_controller.validate_scope_registry_auth
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+      x-apikeyInfoFunc: swagger_server.controllers.authorization_controller.check_api_key
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: swagger_server.controllers.authorization_controller.decode_token

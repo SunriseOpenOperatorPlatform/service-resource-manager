@@ -34,7 +34,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install wheel
 
 #RUN pip3 install --no-cache --upgrade setuptools
-RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /usr/src/app
 
