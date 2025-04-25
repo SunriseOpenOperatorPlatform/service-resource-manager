@@ -31,20 +31,19 @@ logger=logging.getLogger(__name__)
 # driver=os.environ['DRIVER'].strip()
 
 adapter_name = os.environ['EDGE_CLOUD_ADAPTER_NAME']
-edge_cloud_provider = os.environ['PLATFORM_PROVIDER']
 adapter = None
 
 if adapter_name=='aeros':
-     from adapters.edgecloud.clients.aeros.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.aeros.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='i2edge':
-     from adapters.edgecloud.clients.i2edge.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.i2edge.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='eurecom_platform':
-     from adapters.edgecloud.clients.eurecom_platform.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.eurecom_platform.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='piedge':
-     from adapters.edgecloud.clients.piedge.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.piedge.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 
 

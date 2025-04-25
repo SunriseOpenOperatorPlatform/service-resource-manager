@@ -78,6 +78,7 @@ paths:
       tags:
       - Artifact Management
       summary: Copies artifact from source repository to destination repository
+      operationId: copy_artifact
       requestBody:
         description: Artifact details including image name, tag, source repository username and password tec
         content:
@@ -95,6 +96,7 @@ paths:
       tags:
       - Artifact Management
       summary: Check if artifact exists in given repository
+      operationId: artifact_exists
       requestBody:
         description: Artifact details including image name, tag, source repository username and password tec
         content:
@@ -114,8 +116,8 @@ paths:
       tags:
       - Service Functions Catalogue
       summary: Register Service.
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       operationId: register_service_function
       requestBody:
         description: Registration method to save service function into database
@@ -153,8 +155,8 @@ paths:
       - Service Functions Catalogue
       summary: Returns service functions from the catalogue.
       operationId: get_service_functions
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       responses:
         "200":
           description: Returns service functions from the catalogue.
@@ -165,16 +167,16 @@ paths:
         "405":
           description: Method not allowed
       x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
-  /serviceFunction/{serviceFunctionName}:
+  /serviceFunction/{serviceFunctionId}:
     delete:
       tags:
       - Service Functions Catalogue
       summary: Deregister service.
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       operationId: deregister_service_function
       parameters:
-      - name: serviceFunctionName
+      - name: serviceFunctionId
         in: path
         description: Returns a  specific service function from the catalogue.
         required: true
@@ -192,11 +194,11 @@ paths:
       tags:
       - Service Functions Catalogue
       summary: Returns a specific service function from the catalogue.
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       operationId: get_service_function
       parameters:
-      - name: serviceFunctionName
+      - name: serviceFunctionId
         in: path
         description: Returns a  specific service function from the catalogue.
         required: true
@@ -214,302 +216,302 @@ paths:
         "405":
           description: Method not allowed
       x-openapi-router-controller: swagger_server.controllers.service_functions_catalogue_controller
-  /paasService:
-    post:
-      tags:
-      - PaaS Services Catalogue
-      summary: Register PaaS.
-      security:
-        - jwt: [ ]
-      operationId: register_paas
-      requestBody:
-        description: Registration method to save paas service into database
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PaasRegistrationRequest'
-      responses:
-        "200":
-          description: Paas service registered
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
-    patch:
-      tags:
-      - PaaS Services Catalogue
-      summary: Update PaaS registration.
-      operationId: update_paas
-      security:
-        - jwt: [ ]
-      requestBody:
-        description: Registration method to update paas service into database
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PaasRegistrationRequest'
-      responses:
-        "200":
-          description: Paas service registered
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
-    get:
-      tags:
-      - PaaS Services Catalogue
-      summary: Returns PaaS Services from the catalogue.
-      security:
-        - jwt: [ ]
-      operationId: get_paas_services
-      responses:
-        "200":
-          description: Returns PaaS Services from the catalogue.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/appsResponse'
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
-  /paasService/{paasServiceName}:
-    delete:
-      tags:
-      - PaaS Services Catalogue
-      summary: Deregister PaaS.
-      operationId: deregister_paas
-      security:
-        - jwt: [ ]
-      parameters:
-      - name: paasServiceName
-        in: path
-        description: Returns a  specific paas service from the catalogue.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Paas service unregistered
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
-    get:
-      tags:
-      - PaaS Services Catalogue
-      summary: Returns a specific PaaS service from the catalogue.
-      security:
-        - jwt: [ ]
-      operationId: get_paas_service
-      parameters:
-      - name: paasServiceName
-        in: path
-        description: Returns a specific PaaS service from the catalogue.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Returns the paas info status.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/appsResponse_apps'
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
-  /deployedPaas:
-    get:
-      tags:
-      - PaaS Services Instances
-      summary: Returns edge paas services status.
-      security:
-        - jwt: [ ]
-      operationId: deployed_paas_services_status
-      responses:
-        "200":
-          description: Returns the edge PaaS services status per node.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/deployedappsResponse'
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
-    post:
-      tags:
-      - PaaS Services Instances
-      summary: Request to deploy a PaaS (from the catalogue) to an edge node.
-      security:
-        - jwt: [ ]
-      operationId: deploy_paas
-      requestBody:
-        description: Deploy PaaS.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/deployPaas'
-      responses:
-        "200":
-          description: App deployed.
-      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
-    patch:
-      tags:
-      - PaaS Services Instances
-      summary: Request to update the status of a deployed PaaS.
-      security:
-        - jwt: [ ]
-      operationId: update_deployed_paas
-      requestBody:
-        description: update a running paas.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/deployChain'
-      responses:
-        "200":
-          description: App updated.
-      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
-  /deployedPaas/{deployedPaasServiceName}:
-    delete:
-      tags:
-      - PaaS Services Instances
-      summary: Deletes a deployed PaaS service.
-      security:
-        - jwt: [ ]
-      operationId: delete_deployed_paas_service
-      parameters:
-      - name: deployedPaasServiceName
-        in: path
-        description: Represents a paas  from the running deployments.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Deployed app deleted
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
-    get:
-      tags:
-      - PaaS Services Instances
-      summary: Returns the requested edge paas service status.
-      security:
-        - jwt: [ ]
-      operationId: deployed_paas_service_status
-      parameters:
-      - name: deployedPaasServiceName
-        in: path
-        description: Represents a paas  from the running deployments.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Returns the status of the deployed app.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/deployedappsResponse'
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller    
-  /deployedServiceFunction/chain:
-    post:
-      tags:
-      - Service Functions Instances
-      summary: Request to deploy a chain of function services.
-      security:
-        - jwt: [ ]
-      operationId: deploy_chain
-      requestBody:
-        description: Deploy chain.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/deployChain'
-      responses:
-        "200":
-          description: App deployed.
-      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
-    patch:
-      tags:
-      - Service Functions Instances
-      summary: Request to update a chain of function services.
-      operationId: update_chain
-      security:
-        - jwt: [ ]
-      requestBody:
-        description: Deploy chain.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/deployChain'
-      responses:
-        "200":
-          description: App deployed.
-      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
-  /deployedServiceFunction/chain/{chainServiceName}:    
-    delete:
-      tags:
-      - Service Functions Instances
-      summary: Deletes a deployed chain.
-      security:
-        - jwt: [ ]
-      operationId: delete_chain
-      parameters:
-      - name: chainServiceName
-        in: path
-        description: Represents a chain Service  from the running deployments.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Deployed chain deleted
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller  
-  /initNodes:
-    get:
-      tags:
-      - Nodes
-      summary: Initiliaze nodes. Scan nodes in the edge cluster.
-      security:
-        - jwt: [ ]
-      operationId: init_nodes
-      responses:
-        "200":
-          description: Nodes initialized
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.nodes_controller
-  /activateTandemNode:
-    post:
-      tags:
-      - Nodes
-      summary: Request to create a "PaaS-enabled" node.
-      operationId: activate_paas_node
-      security:
-        - jwt: [ ]
-      requestBody:
-        description: activate TANDEM node.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/deployPaaSNode'
-      responses:
-        "200":
-          description: Node activated.
-      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  # /paasService:
+  #   post:
+  #     tags:
+  #     - PaaS Services Catalogue
+  #     summary: Register PaaS.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: register_paas
+  #     requestBody:
+  #       description: Registration method to save paas service into database
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/PaasRegistrationRequest'
+  #     responses:
+  #       "200":
+  #         description: Paas service registered
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+  #   patch:
+  #     tags:
+  #     - PaaS Services Catalogue
+  #     summary: Update PaaS registration.
+  #     operationId: update_paas
+  #     security:
+  #       - jwt: [ ]
+  #     requestBody:
+  #       description: Registration method to update paas service into database
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/PaasRegistrationRequest'
+  #     responses:
+  #       "200":
+  #         description: Paas service registered
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+  #   get:
+  #     tags:
+  #     - PaaS Services Catalogue
+  #     summary: Returns PaaS Services from the catalogue.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: get_paas_services
+  #     responses:
+  #       "200":
+  #         description: Returns PaaS Services from the catalogue.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/appsResponse'
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
+  # /paasService/{paasServiceName}:
+  #   delete:
+  #     tags:
+  #     - PaaS Services Catalogue
+  #     summary: Deregister PaaS.
+  #     operationId: deregister_paas
+  #     security:
+  #       - jwt: [ ]
+  #     parameters:
+  #     - name: paasServiceName
+  #       in: path
+  #       description: Returns a  specific paas service from the catalogue.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Paas service unregistered
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller
+  #   get:
+  #     tags:
+  #     - PaaS Services Catalogue
+  #     summary: Returns a specific PaaS service from the catalogue.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: get_paas_service
+  #     parameters:
+  #     - name: paasServiceName
+  #       in: path
+  #       description: Returns a specific PaaS service from the catalogue.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Returns the paas info status.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/appsResponse_apps'
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_catalogue_controller  
+  # /deployedPaas:
+  #   get:
+  #     tags:
+  #     - PaaS Services Instances
+  #     summary: Returns edge paas services status.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: deployed_paas_services_status
+  #     responses:
+  #       "200":
+  #         description: Returns the edge PaaS services status per node.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/deployedappsResponse'
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+  #   post:
+  #     tags:
+  #     - PaaS Services Instances
+  #     summary: Request to deploy a PaaS (from the catalogue) to an edge node.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: deploy_paas
+  #     requestBody:
+  #       description: Deploy PaaS.
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/deployPaas'
+  #     responses:
+  #       "200":
+  #         description: App deployed.
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+  #   patch:
+  #     tags:
+  #     - PaaS Services Instances
+  #     summary: Request to update the status of a deployed PaaS.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: update_deployed_paas
+  #     requestBody:
+  #       description: update a running paas.
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/deployChain'
+  #     responses:
+  #       "200":
+  #         description: App updated.
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+  # /deployedPaas/{deployedPaasServiceName}:
+  #   delete:
+  #     tags:
+  #     - PaaS Services Instances
+  #     summary: Deletes a deployed PaaS service.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: delete_deployed_paas_service
+  #     parameters:
+  #     - name: deployedPaasServiceName
+  #       in: path
+  #       description: Represents a paas  from the running deployments.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Deployed app deleted
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller
+  #   get:
+  #     tags:
+  #     - PaaS Services Instances
+  #     summary: Returns the requested edge paas service status.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: deployed_paas_service_status
+  #     parameters:
+  #     - name: deployedPaasServiceName
+  #       in: path
+  #       description: Represents a paas  from the running deployments.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Returns the status of the deployed app.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/deployedappsResponse'
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.paas_services_instances_controller    
+  # /deployedServiceFunction/chain:
+  #   post:
+  #     tags:
+  #     - Service Functions Instances
+  #     summary: Request to deploy a chain of function services.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: deploy_chain
+  #     requestBody:
+  #       description: Deploy chain.
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/deployChain'
+  #     responses:
+  #       "200":
+  #         description: App deployed.
+  #     x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+  #   patch:
+  #     tags:
+  #     - Service Functions Instances
+  #     summary: Request to update a chain of function services.
+  #     operationId: update_chain
+  #     security:
+  #       - jwt: [ ]
+  #     requestBody:
+  #       description: Deploy chain.
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/deployChain'
+  #     responses:
+  #       "200":
+  #         description: App deployed.
+  #     x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+  # /deployedServiceFunction/chain/{chainServiceName}:    
+  #   delete:
+  #     tags:
+  #     - Service Functions Instances
+  #     summary: Deletes a deployed chain.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: delete_chain
+  #     parameters:
+  #     - name: chainServiceName
+  #       in: path
+  #       description: Represents a chain Service  from the running deployments.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Deployed chain deleted
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller  
+  # /initNodes:
+  #   get:
+  #     tags:
+  #     - Nodes
+  #     summary: Initiliaze nodes. Scan nodes in the edge cluster.
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: init_nodes
+  #     responses:
+  #       "200":
+  #         description: Nodes initialized
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  # /activateTandemNode:
+  #   post:
+  #     tags:
+  #     - Nodes
+  #     summary: Request to create a "PaaS-enabled" node.
+  #     operationId: activate_paas_node
+  #     security:
+  #       - jwt: [ ]
+  #     requestBody:
+  #       description: activate TANDEM node.
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/deployPaaSNode'
+  #     responses:
+  #       "200":
+  #         description: Node activated.
+  #     x-openapi-router-controller: swagger_server.controllers.nodes_controller
   /node:
     get:
       tags:
@@ -616,22 +618,22 @@ paths:
         "200":
           description: Node Deleted.
       x-openapi-router-controller: swagger_server.controllers.nodes_controller
-  /targets:
-    get:
-      tags:
-      - Nodes
-      summary: Returns IP of all nodes for Prometheus.
-      operationId: prometheus_targets
-      responses:
-        "200":
-          description: Returns the targets for Prometheus service.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/nodesResponse'
-        "405":
-          description: Method not allowed        
-      x-openapi-router-controller: swagger_server.controllers.nodes_controller
+  # /targets:
+  #   get:
+  #     tags:
+  #     - Nodes
+  #     summary: Returns IP of all nodes for Prometheus.
+  #     operationId: prometheus_targets
+  #     responses:
+  #       "200":
+  #         description: Returns the targets for Prometheus service.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/nodesResponse'
+  #       "405":
+  #         description: Method not allowed        
+  #     x-openapi-router-controller: swagger_server.controllers.nodes_controller
   /deployedServiceFunction:
     post:
       tags:
@@ -639,14 +641,14 @@ paths:
       summary: Request to deploy a Service function (from the catalogue) to an edge
         node.
       operationId: deploy_service_function
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       requestBody:
         description: Deploy Service Function.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/deployServiceFunction'
+              $ref: '#/components/schemas/DeployApp'
       responses:
         "200":
           description: App deployed.
@@ -656,8 +658,8 @@ paths:
       - Service Functions Instances
       summary: Returns the edge service functions status per node.
       operationId: deployed_service_functions_status
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       responses:
         "200":
           description: Returns the edge service functions status per node.
@@ -691,8 +693,8 @@ paths:
       - Service Functions Instances
       summary: Returns the requested edge service status per node.
       operationId: deployed_service_function_status
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       parameters:
       - name: deployedServiceFunctionName
         in: path
@@ -717,8 +719,8 @@ paths:
       - Service Functions Instances
       summary: Deletes a deployed Service function.
       operationId: delete_deployed_service_function
-      security:
-        - jwt: [ ]
+      # security:
+      #   - jwt: [ ]
       parameters:
       - name: deployedServiceFunctionName
         in: path
@@ -734,91 +736,91 @@ paths:
         "405":
           description: Method not allowed
       x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
-  /securedSlice:
-    post:
-      tags:
-      - Security Automation
-      summary: Enables a secured slice
-      security:
-        - jwt: [ ]
-      operationId: activate_secured_slice
-      requestBody:
-        description: Creates a secured slice
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activateSecuredSlice'
-      responses:
-        "200":
-          description: Deployed chain deleted
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.security_automation_controller
-  /securedSlice/{sliceName}:
-    delete:
-      tags:
-      - Security Automation
-      summary: Disables security monitoring over a slice
-      security:
-        - jwt: [ ]
-      operationId: delete_secured_slice
-      parameters:
-      - name: sliceName
-        in: path
-        description: Represents a slice from the running slices.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Deployed chain deleted
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.security_automation_controller
+  # /securedSlice:
+  #   post:
+  #     tags:
+  #     - Security Automation
+  #     summary: Enables a secured slice
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: activate_secured_slice
+  #     requestBody:
+  #       description: Creates a secured slice
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/activateSecuredSlice'
+  #     responses:
+  #       "200":
+  #         description: Deployed chain deleted
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.security_automation_controller
+  # /securedSlice/{sliceName}:
+  #   delete:
+  #     tags:
+  #     - Security Automation
+  #     summary: Disables security monitoring over a slice
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: delete_secured_slice
+  #     parameters:
+  #     - name: sliceName
+  #       in: path
+  #       description: Represents a slice from the running slices.
+  #       required: true
+  #       style: simple
+  #       explode: false
+  #       schema:
+  #         type: string
+  #     responses:
+  #       "200":
+  #         description: Deployed chain deleted
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.security_automation_controller
 
-  /addIotDevice:
-    post:
-      tags:
-        - IoT Devices
-      summary: Adds an IoT Device
-      security:
-        - jwt: [ ]
-      operationId: add_iot_device
-      requestBody:
-        description: Adds an IoT Device
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/addIotDevice'
-      responses:
-        "200":
-          description: Deployed chain deleted
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.iot_devices_controller
+  # /addIotDevice:
+  #   post:
+  #     tags:
+  #       - IoT Devices
+  #     summary: Adds an IoT Device
+  #     security:
+  #       - jwt: [ ]
+  #     operationId: add_iot_device
+  #     requestBody:
+  #       description: Adds an IoT Device
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/addIotDevice'
+  #     responses:
+  #       "200":
+  #         description: Deployed chain deleted
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.iot_devices_controller
 
-  /serviceFunctionNodeMigration:
-    post:
-      tags:
-      - Node Migration
-      summary: Migrates service function from one node to another
-      security:
-        - jwt: []
-      operationId: service_function_node_migration
-      requestBody:
-        description: Migrates service function from one node to another
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/serviceFunctionNodeMigration'
-      responses:
-        "200":
-          description: Service function migrated successfully
-        "405":
-          description: Method not allowed
-      x-openapi-router-controller: swagger_server.controllers.node_migration_controller
+  # /serviceFunctionNodeMigration:
+  #   post:
+  #     tags:
+  #     - Node Migration
+  #     summary: Migrates service function from one node to another
+  #     security:
+  #       - jwt: []
+  #     operationId: service_function_node_migration
+  #     requestBody:
+  #       description: Migrates service function from one node to another
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/serviceFunctionNodeMigration'
+  #     responses:
+  #       "200":
+  #         description: Service function migrated successfully
+  #       "405":
+  #         description: Method not allowed
+  #     x-openapi-router-controller: swagger_server.controllers.node_migration_controller
 
 
 components:
@@ -1609,7 +1611,35 @@ components:
           example: user123
         password:
           type: string
-          example: 1234    
+          example: 1234
+    DeployApp:
+      type: object
+      properties:
+        appId:
+          type: string
+          example: "123456789"
+        appZones:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeCloudZone'
+    EdgeCloudZone:
+      type: object
+      properties:
+        edgeCloudZoneId:
+          type: string
+          example: "123456789"
+        edgeCloudZoneName:
+          type: string
+          example: Test
+        edgeCloudZoneStatus:
+          type: string
+          example: active
+        edgeCloudProvider:
+          type: string
+          example: Test
+        edgeCloudRegion:
+          type: string
+          example: Test        
 
   securitySchemes:
     registry_auth:

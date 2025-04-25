@@ -18,7 +18,7 @@ import json
 
 #K8S AUTH
 
-adapter_name = os.environ['ADAPTER_NAME']
+adapter_name = os.environ['EDGE_CLOUD_ADAPTER_NAME']
 if adapter_name=='piedge':
 
     master_node_password=os.environ["KUBERNETES_MASTER_PASSWORD"].strip()
@@ -27,17 +27,25 @@ if adapter_name=='piedge':
     master_node_port=os.environ["KUBERNETES_MASTER_PORT"].strip()
     token_k8s=os.environ["KUBERNETES_MASTER_TOKEN"].strip()
     kube_config_path=os.environ["KUBE_CONFIG_PATH"].strip()
+    username = os.environ["KUBERNETES_USERNAME"].strip()
 
     host="https://"+master_node_ip+":"+master_node_port
+    configuration.api_key['authorization'] = token_k8s
+    configuration.api_key_prefix['authorization'] = 'Bearer'
 
-    config.load_kube_config(config_file=kube_config_path)
-    v1 = client.CoreV1Api(client.ApiClient())
+    configuration.host =  host
+
+    configuration.username = username
+    configuration.verify_ssl=False
+
+    # config.load_kube_config(config_file=kube_config_path)
+    v1 = client.CoreV1Api(client.ApiClient(configuration))
 
     # config.lod
     #client.Configuration.set_default(configuration)
     #Defining host is optional and default to http://localhost
     # Enter a context with an instance of the API kubernetes.client
-    with client.ApiClient() as api_client:
+    with client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
         api_instance = client.AdmissionregistrationApi(api_client)
         api_instance_appsv1 = client.AppsV1Api(api_client)
@@ -219,7 +227,7 @@ def get_PoP_statistics(nodeName):
         x1=x.json()
     except requests.exceptions.HTTPError as e:
         # logging.error(traceback.format_exc())
-        return ("Exception when calling CoreV1Api->/api/v1/namespaces/pi-edge/persistentvolumeclaims: %s\n" % e)
+        return ("Exception when calling CoreV1Api->/api/v1/namespaces/sunrise6g/persistentvolumeclaims: %s\n" % e)
     k8s_nodes = api_custom.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
 
 
@@ -328,7 +336,7 @@ def get_PoPs():
         # x1 = x.json()
     except requests.exceptions.HTTPError as e:
         # logging.error(traceback.format_exc())
-        return ("Exception when calling CoreV1Api->/api/v1/namespaces/pi-edge/persistentvolumeclaims: %s\n" % e)
+        return ("Exception when calling CoreV1Api->/api/v1/namespaces/sunrise6g/persistentvolumeclaims: %s\n" % e)
 
 
     # client.models.v1_node_list.V1NodeList
@@ -355,23 +363,23 @@ def get_PoPs():
 
 def delete_service_function(service_function_name):
 
-    deleted_app = api_instance_appsv1.delete_namespaced_deployment(name=service_function_name, namespace="pi-edge")
+    deleted_app = api_instance_appsv1.delete_namespaced_deployment(name=service_function_name, namespace="sunrise6g")
 
 
-    deleted_service = v1.delete_namespaced_service(name=service_function_name, namespace="pi-edge")
+    deleted_service = v1.delete_namespaced_service(name=service_function_name, namespace="sunrise6g")
 
 
 
-    hpa_list = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("pi-edge")
+    hpa_list = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("sunrise6g")
 
     #hpas=hpa_list["items"]
 
     for hpa in hpa_list.items:
         if hpa.metadata.name==service_function_name:
-            deleted_hpa = api_instance_v1autoscale.delete_namespaced_horizontal_pod_autoscaler(name=service_function_name, namespace="pi-edge")
+            deleted_hpa = api_instance_v1autoscale.delete_namespaced_horizontal_pod_autoscaler(name=service_function_name, namespace="sunrise6g")
             break
     #deletevolume
-    volume_list = v1.list_namespaced_persistent_volume_claim("pi-edge")
+    volume_list = v1.list_namespaced_persistent_volume_claim("sunrise6g")
     for volume in volume_list.items:
         name_v=service_function_name+str("-")
         if name_v in volume.metadata.name:
@@ -379,7 +387,7 @@ def delete_service_function(service_function_name):
                 name=volume.spec.volume_name)
 
             deleted_pvc = v1.delete_namespaced_persistent_volume_claim(
-                name=volume.metadata.name, namespace="pi-edge")
+                name=volume.metadata.name, namespace="sunrise6g")
 
     doc = {}
     doc["instance_name"] = service_function_name
@@ -406,12 +414,13 @@ def delete_chain(chain_name):
 
 def deploy_service_function(descriptor_service_function):
     #deploys a Deployment yaml file, a service, a pvc and a hpa
-    logging.info('DESCRIPTOR: '+descriptor_service_function)
+    # logging.info('DESCRIPTOR: '+descriptor_service_function)
+    logging.info(descriptor_service_function)
     if "volumes" in descriptor_service_function:
         for volume in descriptor_service_function["volumes"]:
-            #first solution (python k8s client arises error without reason!)
+            #first solution (python k8s client raises error without reason!)
             #body_volume = create_pvc(descriptor_service_function["name"], volume)
-            #api_response_pvc = v1.create_namespaced_persistent_volume_claim("pi-edge", body_volume)
+            #api_response_pvc = v1.create_namespaced_persistent_volume_claim("sunrise6g", body_volume)
 
 
             # #deploy pv
@@ -433,13 +442,13 @@ def deploy_service_function(descriptor_service_function):
 
             if volume.get("hostpath") is None:
                 try:
-                    url = host+"/api/v1/namespaces/pi-edge/persistentvolumeclaims"
+                    url = host+"/api/v1/namespaces/sunrise6g/persistentvolumeclaims"
                     body_volume = create_pvc_dict(descriptor_service_function["name"], volume)
                     headers = {"Authorization": "Bearer "+token_k8s}
                     requests.post(url, headers=headers, json=body_volume, verify=False)
                 except requests.exceptions.HTTPError as e:
                     # logging.error(traceback.format_exc())
-                    return ("Exception when calling CoreV1Api->/api/v1/namespaces/pi-edge/persistentvolumeclaims: %s\n" % e)
+                    return ("Exception when calling CoreV1Api->/api/v1/namespaces/sunrise6g/persistentvolumeclaims: %s\n" % e)
 
             #api_response_pvc = api_instance_corev1api.create_namespaced_persistent_volume_claim
     body_deployment = create_deployment(descriptor_service_function)
@@ -448,16 +457,16 @@ def deploy_service_function(descriptor_service_function):
 
 
     try:
-        api_response_deployment = api_instance_appsv1.create_namespaced_deployment("pi-edge", body_deployment)
+        api_response_deployment = api_instance_appsv1.create_namespaced_deployment("sunrise6g", body_deployment)
         #api_response_service = api_instance_apiregv1.create_api_service(body_service)
-        api_response_service=v1.create_namespaced_service("pi-edge",body_service)
+        api_response_service=v1.create_namespaced_service("sunrise6g",body_service)
         if "autoscaling_policies" in descriptor_service_function:
             #V1 AUTOSCALER
             body_hpa = create_hpa(descriptor_service_function)
-            api_instance_v1autoscale.create_namespaced_horizontal_pod_autoscaler("pi-edge",body_hpa)
+            api_instance_v1autoscale.create_namespaced_horizontal_pod_autoscaler("sunrise6g",body_hpa)
             # V2beta1 AUTOSCALER
             #body_hpa = create_hpa(descriptor_paas)
-            #api_instance_v2beta1autoscale.create_namespaced_horizontal_pod_autoscaler("pi-edge",body_hpa)
+            #api_instance_v2beta1autoscale.create_namespaced_horizontal_pod_autoscaler("sunrise6g",body_hpa)
         body_r = "Service " + descriptor_service_function["name"] + " deployed successfully"
         return body_r
     except ApiException as e:
@@ -478,11 +487,11 @@ def patch_service_function(descriptor_paas):
 
     try:
 
-        api_response_deployment = api_instance_appsv1.patch_namespaced_deployment(namespace="pi-edge", name=descriptor_paas["name"], body=body_deployment)
+        api_response_deployment = api_instance_appsv1.patch_namespaced_deployment(namespace="sunrise6g", name=descriptor_paas["name"], body=body_deployment)
         #api_response_service = api_instance_apiregv1.create_api_service(body_service)
-        api_response_service=v1.patch_namespaced_service(namespace="pi-edge", name=descriptor_paas["name"], body=body_service)
+        api_response_service=v1.patch_namespaced_service(namespace="sunrise6g", name=descriptor_paas["name"], body=body_service)
         if "autoscaling_policies" in descriptor_paas:
-            api_response_hpa = api_instance_v1autoscale.patch_namespaced_horizontal_pod_autoscaler(namespace="pi-edge", name=descriptor_paas["name"], body=body_hpa)
+            api_response_hpa = api_instance_v1autoscale.patch_namespaced_horizontal_pod_autoscaler(namespace="sunrise6g", name=descriptor_paas["name"], body=body_hpa)
 
         body_r="PaaS service "+descriptor_paas["name"] +" updated successfuly"
         return body_r
@@ -500,7 +509,7 @@ def create_deployment(descriptor_service_function):
     metadata = client.V1ObjectMeta(name=descriptor_service_function["name"])
     # selector
     dict_label = {}
-    dict_label['pi-edge'] = descriptor_service_function["name"]
+    dict_label['sunrise6g'] = descriptor_service_function["name"]
     selector = client.V1LabelSelector(match_labels=dict_label)
 
     # create spec
@@ -640,7 +649,7 @@ def create_deployment(descriptor_service_function):
 
 def create_service(descriptor_service_function):
     dict_label = {}
-    dict_label['pi-edge'] = descriptor_service_function["name"]
+    dict_label['sunrise6g'] = descriptor_service_function["name"]
     metadata = client.V1ObjectMeta(name=descriptor_service_function["name"], labels=dict_label)
 
     #  spec
@@ -680,7 +689,7 @@ def create_service(descriptor_service_function):
 def create_pvc(name, volumes):
     dict_label = {}
     name_vol=name+str("-")+volumes["name"]
-    dict_label['pi-edge'] = name_vol
+    dict_label['sunrise6g'] = name_vol
     #metadata = client.V1ObjectMeta(name=name_vol)
     metadata = client.V1ObjectMeta(name=name_vol, labels=dict_label)
     api_version = 'v1',
@@ -710,7 +719,7 @@ def create_pvc_dict(name, volumes, storage_class='microk8s-hostpath', volume_nam
     body={"api_version": "v1",
      "kind": "PersistentVolumeClaim",
      "metadata": {
-         "labels": {"pi-edge": name_vol},
+         "labels": {"sunrise6g": name_vol},
          "name": name_vol},
      "spec": {
          "accessModes": ["ReadWriteOnce"],
@@ -733,7 +742,7 @@ def create_pv_dict(name, volumes, storage_class, node=None):
         "metadata": {
             "name": name_vol,
             "labels": {
-                "pi-edge": name_vol,
+                "sunrise6g": name_vol,
             }
         },
         "spec": {
@@ -797,7 +806,7 @@ def check_for_update_hpas(deployed_hpas):
                             policies.append(policy)
                             desc_paas["autoscaling_policies"]=policies
                             body_hpa = create_hpa(desc_paas)
-                            api_instance_v1autoscale.patch_namespaced_horizontal_pod_autoscaler(namespace="pi-edge",
+                            api_instance_v1autoscale.patch_namespaced_horizontal_pod_autoscaler(namespace="sunrise6g",
                                                                                                 name=desc_paas["name"],
                                                                                                 body=body_hpa)
                         break
@@ -886,9 +895,9 @@ def create_hpa(descriptor_service_function):
 
 def get_deployed_dataspace_connector(instance_name):
     label_selector = {}
-    api_response = api_instance_appsv1.list_namespaced_deployment("pi-edge")
+    api_response = api_instance_appsv1.list_namespaced_deployment("sunrise6g")
 
-    api_response_service = v1.list_namespaced_service("pi-edge")
+    api_response_service = v1.list_namespaced_service("sunrise6g")
     app_ = {}
     for app in api_response.items:
         metadata = app.metadata
@@ -949,15 +958,15 @@ def get_deployed_service_functions():
     # if deployed_hpas:
     #     check_for_update_hpas(deployed_hpas)
     ##########
-    api_response = api_instance_appsv1.list_namespaced_deployment("pi-edge")
+    api_response = api_instance_appsv1.list_namespaced_deployment("sunrise6g")
 
-    api_response_service= v1.list_namespaced_service("pi-edge")
-    api_response_pvc= v1.list_namespaced_persistent_volume_claim("pi-edge")
+    api_response_service= v1.list_namespaced_service("sunrise6g")
+    api_response_pvc= v1.list_namespaced_persistent_volume_claim("sunrise6g")
 
 
     #
-    # hpa_list = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("pi-edge")
-    # api_response_pod = v1.list_namespaced_pod("pi-edge")
+    # hpa_list = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("sunrise6g")
+    # api_response_pod = v1.list_namespaced_pod("sunrise6g")
     #
     apps=[]
     for app in api_response.items:
@@ -1054,7 +1063,7 @@ def get_deployed_hpas():
     label_selector={}
 
     #APPV1 Implementation!
-    api_response = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("pi-edge")
+    api_response = api_instance_v1autoscale.list_namespaced_horizontal_pod_autoscaler("sunrise6g")
 
     hpas=[]
     for hpa in api_response.items:
@@ -1117,7 +1126,7 @@ def get_deployed_hpas():
 def operate_service_function_node_migration(service_function_to_migrate: ServiceFunctionNodeMigration):
     try:
         instance_name = service_function_to_migrate.service_function_instance_name
-        api_response_current = api_instance_appsv1.read_namespaced_deployment(instance_name, 'pi-edge')
+        api_response_current = api_instance_appsv1.read_namespaced_deployment(instance_name, 'sunrise6g')
 
         source_location = api_response_current.spec.template.spec.node_selector['location']
         destination_location = service_function_to_migrate.destination_location
@@ -1142,7 +1151,7 @@ def operate_service_function_node_migration(service_function_to_migrate: Service
             #scale down deployment; should stop writing in the volume until migration
             replicas_before_scale_down = api_response_current.spec.replicas
             api_response_current.spec.replicas = 0
-            api_response_scaled_down = api_instance_appsv1.patch_namespaced_deployment(instance_name, namespace='pi-edge', body=api_response_current)
+            api_response_scaled_down = api_instance_appsv1.patch_namespaced_deployment(instance_name, namespace='sunrise6g', body=api_response_current)
 
             for volume in volumes:
                 pvc_name = volume.persistent_volume_claim.claim_name
@@ -1156,7 +1165,7 @@ def operate_service_function_node_migration(service_function_to_migrate: Service
                 new_pvc_name = f'{instance_name}-{destination_node}-pvc'
                 new_pv_name = f'{instance_name}-{destination_node}-pv'
 
-                pvc_body = v1.read_namespaced_persistent_volume_claim(pvc_name, 'pi-edge')
+                pvc_body = v1.read_namespaced_persistent_volume_claim(pvc_name, 'sunrise6g')
 
                 pv_name = pvc_body.spec.volume_name
 
@@ -1169,12 +1178,12 @@ def operate_service_function_node_migration(service_function_to_migrate: Service
                 new_pvc_name_final = new_pvc["metadata"]["name"]
 
                 pv_created = v1.create_persistent_volume(body=new_pv)
-                pvc_created = v1.create_namespaced_persistent_volume_claim(body=new_pvc, namespace='pi-edge')
+                pvc_created = v1.create_namespaced_persistent_volume_claim(body=new_pvc, namespace='sunrise6g')
 
                 #create a k8s job that will perform the persistent volume migration
                 job_body = create_pv_migration_job(pvc_name, new_pvc_name_final, source_location)
 
-                job_created = api_instance_batchv1.create_namespaced_job(namespace='pi-edge', body=job_body)
+                job_created = api_instance_batchv1.create_namespaced_job(namespace='sunrise6g', body=job_body)
 
                 job_name = job_body["metadata"]["name"]
 
@@ -1182,31 +1191,31 @@ def operate_service_function_node_migration(service_function_to_migrate: Service
                     if is_job_completed(job_name):
                         print(f"Job  {job_name} completed successfully")
 
-                        api_instance_batchv1.delete_namespaced_job(job_name, namespace='pi-edge')
+                        api_instance_batchv1.delete_namespaced_job(job_name, namespace='sunrise6g')
                         break
                     else:
                         print(f"Waiting for job {job_name} to be completed...")
                         time.sleep(5)
 
             #migrating deployment to destination node and scaling up to previous number of replicas
-            api_response_scaled_down_read = api_instance_appsv1.read_namespaced_deployment(name=instance_name, namespace='pi-edge')
+            api_response_scaled_down_read = api_instance_appsv1.read_namespaced_deployment(name=instance_name, namespace='sunrise6g')
             api_response_scaled_down_read.spec.template.spec.node_selector = {'location': service_function_to_migrate.destination_location}
             api_response_scaled_down_read.spec.template.spec.volumes[0].persistent_volume_claim.claim_name = new_pvc_name_final
             api_response_scaled_down_read.spec.replicas = replicas_before_scale_down
 
             print(f"Replicas before scale down were: {replicas_before_scale_down}")
 
-            api_response_scaled_up = api_instance_appsv1.patch_namespaced_deployment(instance_name, namespace='pi-edge',
+            api_response_scaled_up = api_instance_appsv1.patch_namespaced_deployment(instance_name, namespace='sunrise6g',
                                                                                        body=api_response_scaled_down_read)
 
 
-            api_response_pvc_removal = api_instance_corev1api.delete_namespaced_persistent_volume_claim(pvc_name, namespace='pi-edge')
+            api_response_pvc_removal = api_instance_corev1api.delete_namespaced_persistent_volume_claim(pvc_name, namespace='sunrise6g')
 
             api_response_pv_removal = api_instance_corev1api.delete_persistent_volume(pv_name)
         else:
 
             api_response_current.spec.template.spec.node_selector = {'location': service_function_to_migrate.destination_location}
-            api_response_new = api_instance_appsv1.patch_namespaced_deployment(name=service_function_to_migrate.service_function_instance_name, namespace='pi-edge',
+            api_response_new = api_instance_appsv1.patch_namespaced_deployment(name=service_function_to_migrate.service_function_instance_name, namespace='sunrise6g',
                                                                               body=api_response_current)
 
         body_r = f"Service function {service_function_to_migrate.service_function_instance_name} successfully migrated from {source_location} to {destination_location}!"
@@ -1242,8 +1251,8 @@ def create_pv_migration_job(source_pvc, destination_pvc, source_location):
                             "args": [
                                 "pv-migrate", "migrate", f"{source_pvc}", f"{destination_pvc}",
                                 "-k", "/root/.kube/config",
-                                "-n", "pi-edge",
-                                "-N", "pi-edge",
+                                "-n", "sunrise6g",
+                                "-N", "sunrise6g",
                                 "-i", "-s", "svc,lbsvc", "-b"
                             ],
                             "volumeMounts": [
@@ -1275,7 +1284,7 @@ def create_pv_migration_job(source_pvc, destination_pvc, source_location):
     return job_manifest
 
 def is_job_completed(job_name):
-    job = api_instance_batchv1.read_namespaced_job(name=job_name, namespace="pi-edge")
+    job = api_instance_batchv1.read_namespaced_job(name=job_name, namespace="sunrise6g")
     if job.status.succeeded is not None and job.status.succeeded > 0:
         return True
     return False

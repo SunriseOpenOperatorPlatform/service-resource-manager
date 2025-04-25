@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,13 +7,13 @@ metadata:
     kompose.version: 1.26.0 (40646f47)
   creationTimestamp: null
   labels:
-    io.kompose.service: piedgecontroller
-  name: piedgecontroller
+    io.kompose.service: srmcontroller
+  name: srmcontroller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: piedgecontroller
+      io.kompose.service: srmcontroller
   strategy: {}
   template:
     metadata:
@@ -21,52 +22,45 @@ spec:
         kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
-        #io.kompose.network/netEMPkub: "true"
-        io.kompose.service: piedgecontroller
+        io.kompose.service: srmcontroller
     spec:
       containers:
         - env:
             - name: KUBERNETES_MASTER_HOSTNAME
-              value: "sunrise6gsrv"
+              value: k3d-sunriseop-server-0
             - name: KUBERNETES_MASTER_PASSWORD
-              value: "dLask"
+              value: ameThyst23!
             - name: KUBERNETES_MASTER_IP
-              value: "146.124.106.229"
+              value: k3d-sunriseop-server-0
             - name: KUBERNETES_MASTER_PORT
-              value: "16443"  
-            - name: KUBE_CONFIG_PATH  
-              value: "kubeconfig/config.yaml"
+              value: "6443"
+            - name: KUBERNETES_USERNAME
+              value: cluster-admin
+            - name: KUBE_CONFIG_PATH
+              value: ../.kube/config
             - name: EMP_STORAGE_URI
               value: mongodb://mongopiedge:27017
             - name: KUBERNETES_MASTER_TOKEN
-              value: TVVGV1FJb3l0alNUOUdEeVRvbnZKdGhZS3FXUXg2aG5mMGVxekRqRnZhWT0K
-            - name: MONITORING_SERVICE_PASSWORD
-              value: "tandem"
-            - name: MEC_PLATFORM_IP
-              value: "146.124.106.209"
-            - name: MEC_PLATFORM_PORT
-              value: "32500"
-            - name: MONITORING_IP_PROXY
-              value: "146.124.106.220"
-            - name: MONITORING_PORT_PROXY
-              value: "31000"
-            - name: MONITORING_IP
-              value: "146.124.106.209"
-            - name: MONITORING_NODE_PORT
-              value: "443"
+              value: eyJhbGciOiJSUzI1NiIsImtpZCI6IkRRS3VMNktkc1BOYk5ZeDhfSnFvVmJQdkJ6em1FODhPeHNIMHFya3JEQzgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InNybS1zZWNyZXQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiY2x1c3Rlci1hZG1pbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImU1MjUxZjhiLWY2ODItNDU0Ni1hOTgxLWNlNTk0YTg2NmZiNCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmNsdXN0ZXItYWRtaW4ifQ.rnZyHFEE1ywceWqcio0UKQrp5GdfVGQOCXxx3RJpb_vvDj65GvNwN0VgA_anOlzj8kKJ9JQjWrA7an2k-5w0ycjeu8Ei_5Z0dvgRSpvKc4O5kCHddOB1kJl480hKWtZqgL0Vi6YbOziFGqvPd8hxHSTquxUgXEN2BStqII8MpVEK8z8iU2pJE5CNIaukGBozjlgc1Vb6HiEU4_UhlqG61uO6ReRVrzaYa4T1j4Zvvx1JN8t2HYcuv50QlHPrEAfW2F3ed0SBbb_X8AT0pGJrVas_uqZgMcN1j5BLO51RNmCY27ADHwCbj8HWuiHhyuLKQxYw8yKB-iMNQmq2fk3ezw
             - name: DRIVER
-              value: "kubernetes"
+              value: kubernetes
             - name: ARTIFACT_MANAGER_ADDRESS
-              value: "artifact-manager"            
-
-          image: piedge/pi_edge:ectf
-          name: piedgecontroller
+              value: artifact-manager
+            - name: EDGE_CLOUD_ADAPTER_NAME
+              value: piedge
+            - name: PLATFORM_PROVIDER
+              value: ISI
+          image: ghcr.io/openoperatorplatform/srm/srm:1.0.0
+          name: srmcontroller
           ports:
             - containerPort: 8080
           resources: {}
           imagePullPolicy: Always
       restartPolicy: Always
+      imagePullSecrets:
+          - name: ghcr-login-secret
 status: {}
+
 ---
 apiVersion: v1
 kind: Service
@@ -76,8 +70,8 @@ metadata:
     kompose.version: 1.26.0 (40646f47)
   creationTimestamp: null
   labels:
-    io.kompose.service: piedgecontroller
-  name: piedgecontroller
+    io.kompose.service: srm
+  name: srm
 spec:
   type: NodePort
   ports:
@@ -86,10 +80,61 @@ spec:
       port: 8080
       targetPort: 8080
   selector:
-    io.kompose.service: piedgecontroller
+    io.kompose.service: srmcontroller
 status:
   loadBalancer: {}
 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: srm-ingress
+  namespace: piedge
+  annotations:
+    #traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+        paths:
+          - path: /srm
+            pathType: Prefix
+            backend:
+              service:
+                name: srm
+                port:
+                  number: 8080
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mongodb-pv-volume  # Sets PV's name
+  labels:
+    type: local  # Sets PV's type to local
+    app: mongopiedge
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 200Mi # Sets PV Volume
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb_srm"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongo-db
+  name: mongo-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi
+status: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -99,14 +144,15 @@ metadata:
     kompose.version: 1.26.0 (40646f47)
   creationTimestamp: null
   labels:
-    io.kompose.service: service-resource-manager
-  name: service-resource-manager
+    io.kompose.service: mongopiedge
+  name: mongopiedge
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: service-resource-manager
-  strategy: {}
+      io.kompose.service: mongopiedge
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -115,22 +161,22 @@ spec:
       creationTimestamp: null
       labels:
         #io.kompose.network/netEMPkub: "true"
-        io.kompose.service: service-resource-manager
+        io.kompose.service: mongopiedge
     spec:
       containers:
-        - env:
-            - name: K8S_ADAPTER_ADDRESS
-              value: "piedgecontroller:8080"
-            - name: PLATFORM_PROVIDER
-              value: "ICOM"
-
-          image: piedge/pi_edge:srm
-          name: service-resource-manager
+        - image: mongo
+          name: mongopiedge
           ports:
-            - containerPort: 8080
+            - containerPort: 27017
           resources: {}
-          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-db
       restartPolicy: Always
+      volumes:
+        - name: mongo-db
+          persistentVolumeClaim:
+            claimName: mongo-db
 status: {}
 ---
 apiVersion: v1
@@ -141,8 +187,76 @@ metadata:
     kompose.version: 1.26.0 (40646f47)
   creationTimestamp: null
   labels:
-    io.kompose.service: service-resource-manager
-  name: srm
+    io.kompose.service: mongopiedge
+  name: mongopiedge
+spec:
+  type: ClusterIP
+  ports:
+    - name: "27017"
+      port: 27017
+      targetPort: 27017
+  selector:
+    io.kompose.service: mongopiedge
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: oegcontroller
+  name: oegcontroller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: oegcontroller
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: oegcontroller
+    spec:
+      containers:
+        - env:
+            - name: MONGO_URI
+              value: mongodb://oegmongo/sample_db?authSource=admin
+            - name: SRM_HOST
+              value: http://srm 
+            - name: PI_EDGE_USERNAME
+              value: username
+            - name: PI_EDGE_PASSWORD
+              value: password
+            - name: HTTP_PROXY
+              value: http://proxy        
+          image: geop4p/oeg:1.0.0
+          name: oegcontroller
+          ports:
+            - containerPort: 8080
+          resources: {}
+          imagePullPolicy: Always
+      restartPolicy: Always
+
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: oeg
+  name: oeg
 spec:
   type: NodePort
   ports:
@@ -151,31 +265,122 @@ spec:
       port: 8080
       targetPort: 8080
   selector:
-    io.kompose.service: service-resource-manager
+    io.kompose.service: oegcontroller
 status:
   loadBalancer: {}
+
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: srm-ingress
-  namespace: sunrise
+  name: oeg-ingress
+  namespace: piedge
   annotations:
-    #nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-  managedFields:
-      - manager: nginx-ingress-controller
-        operation: Update
-        apiVersion: networking.k8s.io/v1
+    #traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-    ingressClassName: nginx
-    rules:
-    - http:
+  ingressClassName: nginx
+  rules:
+  - http:
         paths:
-        - path: /srm(/|$)(.*)
-          pathType: Prefix
-          backend:
-            service:
-              name: srm
-              port:
-                number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: oeg
+                port:
+                  number: 8080
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: oegmongodb-pv-volume  # Sets PV's name
+  labels:
+    type: local  # Sets PV's type to local
+    app: oegmongo
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 200Mi # Sets PV Volume
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mongodb_oeg"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: oegmongo
+  name: oeg-mongo-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: oegmongo
+  name: oegmongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: oegmongo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        #io.kompose.network/netEMPkub: "true"
+        io.kompose.service: oegmongo
+    spec:
+      containers:
+        - image: mongo
+          name: oegmongo
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-db
+      restartPolicy: Always
+      volumes:
+        - name: mongo-db
+          persistentVolumeClaim:
+            claimName: oeg-mongo-db
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: oegmongo
+  name: oegmongo
+spec:
+  type: ClusterIP
+  ports:
+    - name: "27018"
+      port: 27018
+      targetPort: 27017
+  selector:
+    io.kompose.service: oegmongo
+status:
+  loadBalancer: {}

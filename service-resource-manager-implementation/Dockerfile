@@ -13,7 +13,7 @@ WORKDIR /usr/src/app
 
 
 #THIS SOLVED THE ISSUE WITH CFFI: building wheel for cffi (setup.py) finished with status 'error'!
-RUN apk add --no-cache libffi-dev build-base
+#RUN apk add --no-cache libffi-dev build-base
 #
 COPY requirements.txt /usr/src/app/
 #RUN pip3 install connexion
@@ -34,7 +34,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install wheel
 
 #RUN pip3 install --no-cache --upgrade setuptools
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --no-cache-dir -r requirements.txt
 
 COPY . /usr/src/app
 

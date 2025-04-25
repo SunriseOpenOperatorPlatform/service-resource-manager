@@ -25,7 +25,7 @@ kubernetes==18.20.0
 python-jose[cryptography]
 cffi==1.15.1
 #bcrypt
-bcrypt==3.1.7 #used in python 3.5 running server for dev
+#bcrypt==3.1.7 #used in python 3.5 running server for dev
 
 psycopg2-binary
 #psycopg2==2.7.7 #used in python 3.5 running server for dev

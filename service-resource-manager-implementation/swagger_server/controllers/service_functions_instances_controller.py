@@ -4,6 +4,8 @@ import six
 from swagger_server.models.deploy_chain import DeployChain  # noqa: E501
 from swagger_server.models.deploy_service_function import DeployServiceFunction  # noqa: E501
 from swagger_server.models.deployedapps_response import DeployedappsResponse  # noqa: E501
+from swagger_server.models.edge_cloud_zone import EdgeCloudZone
+from swagger_server.models.deploy_app import DeployApp
 from swagger_server import util
 from swagger_server.core import piedge_encoder
 from swagger_server.utils import connector_db, nodes_monitoring
@@ -20,16 +22,16 @@ edge_cloud_provider = os.environ['PLATFORM_PROVIDER']
 adapter = None
 
 if adapter_name=='aeros':
-     from adapters.edgecloud.clients.aeros.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.aeros.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='i2edge':
-     from adapters.edgecloud.clients.i2edge.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.i2edge.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='eurecom_platform':
-     from adapters.edgecloud.clients.eurecom_platform.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.eurecom_platform.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 elif adapter_name=='piedge':
-     from adapters.edgecloud.clients.piedge.client import EdgeApplicationManager
+     from swagger_server.adapters.edgecloud.clients.piedge.client import EdgeApplicationManager
      adapter = EdgeApplicationManager()
 
 def delete_chain(chain_service_name):  # noqa: E501
@@ -112,8 +114,9 @@ def deploy_service_function():  # noqa: E501
     # if role is not None and role == "admin":
     if connexion.request.is_json:
             try:
+                # body = DeployApp.from_dict(connexion.request.get_json())
                 body = connexion.request.get_json()
-                response = adapter.deploy_app(app_id=body.get('appId'), app_zones=body.get('appZones'))
+                response = adapter.deploy_app(app_id=body.get("appId"), app_zones=body.get("appZones"))
                 # body = DeployServiceFunction.from_dict(connexion.request.get_json())
                 # response = piedge_encoder.deploy_service_function(body)
                 return response

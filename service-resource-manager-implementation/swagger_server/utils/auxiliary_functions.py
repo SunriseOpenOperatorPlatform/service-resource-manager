@@ -36,6 +36,6 @@ def prepare_name(name, driver):
     # deployed_name = deployed_name.replace("-", "")
        name = name.replace("_", "")
        deployed_name_ = ''.join([i for i in name if not i.isdigit()])
-       return deployed_name_ 
+       return deployed_name_.rstrip('-')
     else:
         return name

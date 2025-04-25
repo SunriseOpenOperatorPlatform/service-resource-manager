@@ -3,6 +3,7 @@ import string
 
 import yaml
 import pymongo
+from bson.objectid import ObjectId
 import logging
 from bson import json_util
 from typing import List
@@ -175,13 +176,15 @@ def insert_document_service_function(document=None, _id=None):
     insert_doc["name"] = document["service_function_name"]
     insert_doc["type"] = document["service_function_type"]
     insert_doc["image"] = document["service_function_image"]
-    insert_doc["application_ports"] = document["application_ports"]
-    insert_doc["autoscaling_policies"] = document["autoscaling_policies"]
-    if "required_volumes" in document:
-        insert_doc["required_volumes"] = document["required_volumes"]
-    if "privileged" in document:
-        insert_doc["privileged"] = document["privileged"]
-    insert_doc["required_env_parameters"] = document["required_env_parameters"]
+    if document.get("application_ports") is not None:
+        insert_doc["application_ports"] = document.get("application_ports")
+    if document.get("autoscaling_policies") is not None:
+        insert_doc["autoscaling_policies"] = document.get("autoscaling_policies")
+    # if "required_volumes" in document:
+    #     insert_doc["required_volumes"] = document["required_volumes"]
+    # if "privileged" in document:
+    #     insert_doc["privileged"] = document["privileged"]
+    # insert_doc["required_env_parameters"] = document["required_env_parameters"]
     result=mycol.insert_one(insert_doc)
     return result
 
@@ -250,23 +253,25 @@ def update_document_service_function(document=None, _id=None):
     else:
         return "Service function not found in the catalogue"
 
-def delete_document_service_function(service_function_input_name=None, _id=None):
+def delete_document_service_function(service_function_input_name=None, _id: str=None):
 
+    _id = ObjectId(_id)
     collection = "service_functions"
     myclient = pymongo.MongoClient(storage_url)
     mydbmongo = myclient[mydb_mongo]
     mycol = mydbmongo[collection]
 
-    myquery = {"_id": id}
+    myquery = {"_id": _id}
+    print(myquery)
     mydoc = mycol.find_one(myquery)
 
     if mydoc is None:
-        return "Service function not found in the database"
+        return "Service function not found in the database", 404
     try:
         delete_doc = {}
-        delete_doc["_id"] = id
+        delete_doc["_id"] = _id
         mycol.delete_one(delete_doc)
-        return "Service function deregistered successfully"
+        return "Service function deregistered successfully", 200
     except Exception as ce_:
         raise Exception("An exception occurred :", ce_)
 

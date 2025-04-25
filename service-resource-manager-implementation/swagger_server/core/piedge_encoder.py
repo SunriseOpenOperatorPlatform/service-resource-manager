@@ -43,11 +43,11 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
 
 
     # search if node exists in the node catalogue
-    if service_function.location is not None:
-        node_ = connector_db.get_documents_from_collection("points_of_presence", input_type="location",
-                                                           input_value=service_function.location)
-        if not node_:
-            return "The given location does not exist in the node catalogue"
+    # if service_function.location is not None:
+    #     node_ = connector_db.get_documents_from_collection("points_of_presence", input_type="location",
+    #                                                        input_value=service_function.location)
+    #     if not node_:
+    #         return "The given location does not exist in the node catalogue"
 
     final_deploy_descriptor = {}
     # final_deploy_descriptor["name"]=app_[0]["name"]
@@ -84,7 +84,8 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
 
     #con_["imagePullPolicy"] = "Always"
     #ports
-    application_ports = ser_function_[0]["application_ports"]
+    
+    application_ports = ser_function_[0].get("application_ports")
     con_["application_ports"] = application_ports
 
     if service_function.all_node_ports is not None:
@@ -119,7 +120,7 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
    #check volumes!!
     req_volumes = []
     if "required_volumes" in ser_function_[0]:
-        if ser_function_[0]["required_volumes"] is not None:
+        if ser_function_[0].get("required_volumes") is not None:
             for required_volumes in ser_function_[0]["required_volumes"]:
                 req_volumes.append(required_volumes["name"])
     vol_mount = []
@@ -138,7 +139,7 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
     if (len(vol_mount) != len(req_volumes)):
         return "The selected service function requires " + str(len(req_volumes)) +" volume/ volumes "
     else:
-        if ser_function_[0]["required_volumes"] is not None:
+        if ser_function_[0].get("required_volumes") is not None:
 
             result = auxiliary_functions.equal_ignore_order(req_volumes, vol_mount)
 
@@ -163,7 +164,7 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
 
 
     if "required_env_parameters" in ser_function_[0]:
-        if ser_function_[0]["required_env_parameters"] is not None:
+        if ser_function_[0].get("required_env_parameters") is not None:
             for required_env_parameters in ser_function_[0]["required_env_parameters"]:
                 req_env_parameters.append(required_env_parameters["name"])
     env_names = []
@@ -182,7 +183,7 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
     if (len(env_names) != len(req_env_parameters)):
         return "The selected service function requires " + str(len(req_env_parameters)) + " env parameters"
     else:
-        if ser_function_[0]["required_env_parameters"] is not None:
+        if ser_function_[0].get("required_env_parameters") is not None:
 
             result = auxiliary_functions.equal_ignore_order(req_env_parameters, env_names)
 
@@ -207,7 +208,7 @@ def deploy_service_function(service_function: DeployServiceFunction, paas_name=N
 
     #check autoscaling policies
     if "autoscaling_policies" in ser_function_[0]:
-        if ser_function_[0]["autoscaling_policies"] is not None:
+        if ser_function_[0].get("autoscaling_policies") is not None:
             if service_function.autoscaling_metric is not None:
                 for scaling_method in ser_function_[0]["autoscaling_policies"]:
                     if service_function.autoscaling_policy is not None:
