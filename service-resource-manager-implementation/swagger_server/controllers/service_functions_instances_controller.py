@@ -164,17 +164,17 @@ def deployed_service_functions_status():  # noqa: E501
 
     :rtype: DeployedappsResponse
     """
-    role = user_authentication.check_role()
-    if role is not None and role == "admin":
-        try:
+    # role = user_authentication.check_role()
+    # if role is not None and role == "admin":
+    try:
             # response = kubernetes_connector.get_deployed_service_functions()
-            response = adapter.get_all_deployed_apps()
-            return response
-        except Exception as ce_:
-            logger.error(ce_)
-            return ce_
-    else:
-        return "You are not authorized to access the URL requested", 401    
+        response = adapter.get_all_deployed_apps()
+        return response
+    except Exception as ce_:
+        logger.error(ce_)
+        return ce_
+    # else:
+    #     return "You are not authorized to access the URL requested", 401    
 
 
 def update_chain(body=None):  # noqa: E501

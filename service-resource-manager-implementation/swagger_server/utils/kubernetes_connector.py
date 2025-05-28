@@ -415,7 +415,7 @@ def delete_chain(chain_name):
 def deploy_service_function(descriptor_service_function):
     #deploys a Deployment yaml file, a service, a pvc and a hpa
     # logging.info('DESCRIPTOR: '+descriptor_service_function)
-    logging.info(descriptor_service_function)
+    # logging.info(descriptor_service_function)
     if "volumes" in descriptor_service_function:
         for volume in descriptor_service_function["volumes"]:
             #first solution (python k8s client raises error without reason!)
@@ -996,7 +996,7 @@ def get_deployed_service_functions():
 
         #find volumes!
         for app_col in apps_col:
-            if  app_col["required_volumes"] is not None:
+            if  app_col.get("required_volumes") is not None:
                 volumes_=[]
                 for volume in app_col["required_volumes"]:
                     for item in api_response_pvc.items:

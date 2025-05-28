@@ -30,29 +30,38 @@ class EdgeApplicationManager(EdgeCloudManagementInterface):
 
     def get_all_onboarded_apps(self) -> List[Dict]:
         logging.info('Retrieving all registered apps from database...')
-        app_list = connector_db.get_documents_from_collection(collection_input="service_functions")
+        db_list = connector_db.get_documents_from_collection(collection_input="service_functions")
+        app_list = []
+        for sf in db_list:
+            app_list.append(self.__transform_to_camara(sf))
         return app_list
         # return [{"appId": "1234-5678", "name": "TestApp"}]
 
     def get_onboarded_app(self, app_id: str) -> Dict:
         logging.info('Searching for registered app with ID: '+ app_id+' in database...')
         app = connector_db.get_documents_from_collection("service_functions", input_type="_id", input_value=app_id)
-        return app
+        if len(app)>0:
+            return self.__transform_to_camara(app[0])
+        else:
+            return []
 
     def delete_onboarded_app(self, app_id: str) -> None:
         logging.info('Deleting registered app with ID: '+ app_id+' from database...')
         result, code = connector_db.delete_document_service_function(_id=app_id)
+        print(f"Removing application metadata: {app_id}")
         return result, code
-        # print(f"Deleting application: {app_id}")
 
     def deploy_app(self, app_id: str, app_zones: List[Dict]) -> Dict:
         logging.info('Searching for registered app with ID: '+ app_id+' in database...')
         app = connector_db.get_documents_from_collection("service_functions", input_type="_id", input_value=app_id)
         success_response = []
+        if len(app)<1:
+            return 'Application with ID: '+ app_id+' not found', 404
         if app is not None:
+            logging.info(app_zones)
             for zone in app_zones:
                 sf = DeployServiceFunction(service_function_name=app[0].get('name'), 
-                                           service_function_instance_name=app[0].get('name')+'-'+zone.get('edgeCloudZoneName'), 
+                                           service_function_instance_name=app[0].get('name')+'-'+zone.get('EdgeCloudZone').get('edgeCloudZoneName'), 
                                            location=zone.get('edgeCloudZoneName'))
                 result = deploy_service_function(service_function=sf)
                 success_response.append(result)
@@ -61,8 +70,18 @@ class EdgeApplicationManager(EdgeCloudManagementInterface):
 
     def get_all_deployed_apps(self, app_id: Optional[str] = None, app_instance_id: Optional[str] = None, region: Optional[str] = None) -> List[Dict]:
         logging.info('Retreiving all deployed apps in the edge cloud platform')
-        response = kubernetes_connector.get_deployed_service_functions()
-        return [{"appInstanceId": "abcd-efgh", "status": "ready"}]
+        deployments = kubernetes_connector.get_deployed_service_functions()
+        response = []
+        for deployment in deployments:
+            item = {}
+            item['appInstanceId'] = deployment.get('uid')
+            item['status'] = deployment.get('status')
+            item['componentEndpointInfo'] = {}
+            item['kubernetesClusterRef'] = ""
+            item['edgeCloudZone'] = {}
+            response.append(item)
+        return response
+        # return [{"appInstanceId": "abcd-efgh", "status": "ready"}]
 
     def undeploy_app(self, app_instance_id: str) -> None:
         logging.info('Searching for deployed app with ID: '+ app_instance_id+' in database...')
@@ -70,10 +89,12 @@ class EdgeApplicationManager(EdgeCloudManagementInterface):
         # deployed_service_function_name_=auxiliary_functions.prepare_name_for_k8s(deployed_service_function_name)
         sfs=kubernetes_connector.get_deployed_service_functions()
         response = 'App instance with ID ['+app_instance_id+'] not found'
-        for service_fun in sfs.items:
+        for service_fun in sfs:
             if service_fun["uid"]==app_instance_id:
-                response = kubernetes_connector.delete_service_function(service_fun['service_function_instance_name'])
-        return response        
+                kubernetes_connector.delete_service_function(service_fun['service_function_instance_name'])
+                response = 'App instance with ID ['+app_instance_id+'] successfully removed'
+                break
+        return response
 
 
     def get_edge_cloud_zones(self, region: Optional[str] = None, status: Optional[str] = None) -> List[Dict]:
@@ -91,3 +112,16 @@ class EdgeApplicationManager(EdgeCloudManagementInterface):
                 zone_list.append(zone)
         return zone_list
     
+    def __transform_to_camara(self, app_data):
+        app = {}
+        app['appId'] = app_data.get('_id')
+        app['name'] = app_data.get('name')
+        app['packageType'] = app_data.get('type')
+        appRepo = {'imagePath': app_data.get('image')}
+        app['appRepo'] = appRepo
+        networkInterfaces = []
+        for port in app_data.get('application_ports'):
+            port_spec = {'protocol': 'TCP', 'port': port}
+            networkInterfaces.append(port_spec)
+        app['componentSpec'] = [{'componentName': app_data.get('name'), 'networkInterfaces': networkInterfaces}]
+        return app

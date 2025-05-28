@@ -73,11 +73,11 @@ paths:
         "405":
           description: Method not allowed
       x-openapi-router-controller: swagger_server.controllers.operations_controller
-  /copy-artifact:
+  /copy-artefact:
     post:
       tags:
-      - Artifact Management
-      summary: Copies artifact from source repository to destination repository
+      - Artefact Management
+      summary: Copies artefact from source repository to destination repository
       operationId: copy_artifact
       requestBody:
         description: Artifact details including image name, tag, source repository username and password tec
@@ -91,14 +91,14 @@ paths:
         "400":
           description: Mandatory fields missing
       x-openapi-router-controller: swagger_server.controllers.artifact_controller
-  /artifact-exists:
+  /artefact-exists:
     post:
       tags:
-      - Artifact Management
-      summary: Check if artifact exists in given repository
+      - Artefact Management
+      summary: Check if artefact exists in given repository
       operationId: artifact_exists
       requestBody:
-        description: Artifact details including image name, tag, source repository username and password tec
+        description: Artefact details including image name, tag, source repository username and password tec
         content:
           application/json:
             schema:
@@ -687,7 +687,7 @@ paths:
         "200":
           description: App updated.
       x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller  
-  /deployedServiceFunction/{deployedServiceFunctionName}:
+  /deployedServiceFunction/{app_id}:
     get:
       tags:
       - Service Functions Instances
@@ -696,7 +696,7 @@ paths:
       # security:
       #   - jwt: [ ]
       parameters:
-      - name: deployedServiceFunctionName
+      - name: app_id
         in: path
         description: Represents a  service function  from the running deployments
         required: true
@@ -722,7 +722,7 @@ paths:
       # security:
       #   - jwt: [ ]
       parameters:
-      - name: deployedServiceFunctionName
+      - name: app_id
         in: path
         description: Represents a service function from the running deployments.
         required: true
@@ -736,6 +736,137 @@ paths:
         "405":
           description: Method not allowed
       x-openapi-router-controller: swagger_server.controllers.service_functions_instances_controller
+  /sessions:
+    post:
+      tags:
+      - Quality on Demand Functions
+      summary: Creates a new QoD Session
+      operationId: create_qod_session
+      requestBody:
+        description: QoD Session body.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/'
+      responses:
+        "200":
+          description: Session created.
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller
+  /sessions/{id}:
+    get:
+      tags:
+      - Quality on Demand Functions
+      summary: Retrieve details of a QoD Session
+      operationId: get_qod_session
+      parameters:
+      - name: id
+        in: path
+        description: Represents a QoD Session.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: QoD Session found
+        "405":
+          description: Method not allowed
+        "404":
+          description: Session not found
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller
+    delete:
+      tags:
+      - Quality on Demand Functions
+      summary: Remove QoD Session
+      operationId: delete_qod_session
+      parameters:
+      - name: id
+        in: path
+        description: Represents a QoD Session.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "201":
+          description: QoD Session deleted
+        "405":
+          description: Method not allowed
+        "404":
+          description: Session not found  
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller
+  /traffic-influences:
+    post:
+      tags:
+      - Traffic Influence Functions
+      summary: Creates a new TrafficInfluence resource
+      operationId: create_traffic_influence_resource
+      requestBody:
+        description: TrafficInfluence body.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/'
+      responses:
+        "200":
+          description: Resource created.
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller
+    get:
+      tags:
+      - Traffic Influence Functions
+      summary: Retrieves all TrafficInfluence resources
+      operationId: get_all_traffic_influence_resources
+      responses:
+        "200":
+          description: Resources retrieved.
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller  
+  /traffic-influences/{id}:
+    get:
+      tags:
+      - Traffic Influence Functions
+      summary: Retrieve details of a TrafficInfluence resource
+      operationId: get_traffic_influence_resource
+      parameters:
+      - name: id
+        in: path
+        description: Represents a TrafficInfluence resource.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: TrafficInfluence resource found
+        "405":
+          description: Method not allowed
+        "404":
+          description: Session not found
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller
+    delete:
+      tags:
+      - Traffic Influence Functions
+      summary: Remove TrafficInfluence resource
+      operationId: delete_traffic_influence_resource
+      parameters:
+      - name: id
+        in: path
+        description: Represents a TrafficInfluence resource
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "201":
+          description: TrafficInfluence resource deleted
+        "405":
+          description: Method not allowed
+        "404":
+          description: Session not found  
+      x-openapi-router-controller: swagger_server.controllers.network_functions_controller    
   # /securedSlice:
   #   post:
   #     tags:
@@ -1546,21 +1677,21 @@ components:
         target_port: 8080
         published_port: 8080
         publish_mode: "host"
-    HelmChartInstall:
-      type: object
-      properties:
-        uri:
-          type: string
-          example: http://helm.chart.net/helm.yaml
-        deployment_name:
-          type: string
-          example: test_helm
-        repo_username:
-          type: string
-          example: test1
-        repo_password:
-          type: string
-          example: test1
+    # HelmChartInstall:
+    #   type: object
+    #   properties:
+    #     uri:
+    #       type: string
+    #       example: http://helm.chart.net/helm.yaml
+    #     deployment_name:
+    #       type: string
+    #       example: test_helm
+    #     repo_username:
+    #       type: string
+    #       example: test1
+    #     repo_password:
+    #       type: string
+    #       example: test1
     CopyArtifactModel:
       type: object
       properties:
