@@ -22,7 +22,7 @@ and execute:
 
 ```
 source export_env_par.txt
-python3 -m swagger_server
+python3 -m src
 ```
 
 and open your browser to here:
@@ -49,10 +49,10 @@ To run the server on a Docker container, please execute the following from the r
 
 ```bash
 # building the image
-docker build -t swagger_server .
+docker build -t src .
 
 # starting up a container
-docker run -p 8080:8080 swagger_server
+docker run -p 8080:8080 src
 ```
 
 

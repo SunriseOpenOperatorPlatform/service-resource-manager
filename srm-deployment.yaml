@@ -45,20 +45,18 @@ spec:
             - name: DRIVER
               value: kubernetes
             - name: ARTIFACT_MANAGER_ADDRESS
-              value: artifact-manager
+              value: http://artefact-manager-service:8000
             - name: EDGE_CLOUD_ADAPTER_NAME
-              value: piedge
+              value: kubernetes
             - name: PLATFORM_PROVIDER
               value: ISI
-          image: ghcr.io/openoperatorplatform/srm/srm:1.0.0
+          image: ghcr.io/sunriseopenoperatorplatform/srm/srm:1.0.0
           name: srmcontroller
           ports:
             - containerPort: 8080
           resources: {}
           imagePullPolicy: Always
       restartPolicy: Always
-      imagePullSecrets:
-          - name: ghcr-login-secret
 status: {}
 
 ---
@@ -89,7 +87,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: srm-ingress
-  namespace: piedge
   annotations:
     #traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
@@ -129,6 +126,7 @@ metadata:
     io.kompose.service: mongo-db
   name: mongo-db
 spec:
+  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
@@ -230,14 +228,16 @@ spec:
             - name: MONGO_URI
               value: mongodb://oegmongo/sample_db?authSource=admin
             - name: SRM_HOST
-              value: http://srm 
-            - name: PI_EDGE_USERNAME
-              value: username
-            - name: PI_EDGE_PASSWORD
-              value: password
-            - name: HTTP_PROXY
-              value: http://proxy        
-          image: geop4p/oeg:1.0.0
+              value: http://srm:8080/piedge-connector/2.0.0
+            - name: FEDERATION_MANAGER_HOST
+              value: http://federation-manager:8989
+            #- name: PI_EDGE_USERNAME
+            #  value: username
+            #- name: PI_EDGE_PASSWORD
+            #  value: password
+            #- name: HTTP_PROXY
+            #  value: http://proxy
+          image: ghcr.io/sunriseopenoperatorplatform/oeg/oeg
           name: oegcontroller
           ports:
             - containerPort: 8080
@@ -261,7 +261,7 @@ spec:
   type: NodePort
   ports:
     - name: "8080"
-      nodePort: 32000
+      nodePort: 32414
       port: 8080
       targetPort: 8080
   selector:
@@ -274,7 +274,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: oeg-ingress
-  namespace: piedge
   annotations:
     #traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
@@ -314,6 +313,7 @@ metadata:
     io.kompose.service: oegmongo
   name: oeg-mongo-db
 spec:
+  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
@@ -384,3 +384,264 @@ spec:
     io.kompose.service: oegmongo
 status:
   loadBalancer: {}
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: artefact-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: artefact-manager
+  template:
+    metadata:
+      labels:
+        app: artefact-manager
+    spec:
+      containers:
+      - name: artefact-manager
+        image: ghcr.io/sunriseopenoperatorplatform/artefactmanager:0.5
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONPATH
+          value: "/app"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: artefact-manager-service
+spec:
+  type: ClusterIP
+  selector:
+    app: artefact-manager
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: federation-manager-config
+data:
+  config.cfg: >-
+    W2tleWNsb2FrXQpjbGllbnQxX2lkID0gb3JpZ2luYXRpbmctb3AtMQpjbGllbnQxX3NlY3JldCA9IGRkN3ZOd0Zxak5wWXdhZ2hsRXdNYncxMGcwa2xXREhiCmNsaWVudDJfaWQgPSBvcmlnaW5hdGluZy1vcC0yCmNsaWVudDJfc2VjcmV0ID0gMm1oem5FUmZXY2xMRHVWb2pZNzdMcDRRZDJyNGU4TXMKc2NvcGUgPSBmZWQtbWdtdAoKW3NlcnZlcl0KaG9zdCA9IDEyNy4wLjAuMQpwb3J0ID0gODk4OQpwcmVmaXggPSBhcGkKdmVyc2lvbiA9IHYxLjAKcHJvdG9jb2wgPSBodHRwCgpbbW9uZ29kYl0KaG9zdCA9IG1vbmdvZGIubW9uZ29kYi5zdmMuY2x1c3Rlci5sb2NhbApwb3J0ID0gMjcwMTcKCltpMmVkZ2VdCmhvc3QgPSAxOTIuMTY4LjEyMy4yMzcKcG9ydCA9IDMwNzYwCgpbb3BfZGF0YV0KcGFydG5lck9QRmVkZXJhdGlvbklkID0gaTJjYXQKcGFydG5lck9QQ291bnRyeUNvZGUgPSBFUwpwYXJ0bmVyT1BNb2JpbGVOZXR3b3JrQ29kZV9NQ0MgPSAwMDEKcGFydG5lck9QTW9iaWxlTmV0d29ya0NvZGVfTU5DID0gMDEKcGFydG5lck9QRml4ZWROZXR3b3JrQ29kZSA9IDM0CnBsYXRmb3JtQ2FwcyA9IGhvbWVSb3V0aW5nCmVkZ2VEaXNjb3ZlcnlTZXJ2aWNlRW5kUG9pbnRfcG9ydCA9CmVkZ2VEaXNjb3ZlcnlTZXJ2aWNlRW5kUG9pbnRfZnFkbiA9IGRpc2NvdmVyeS5vcGVyYXRvcjEuY29tCmVkZ2VEaXNjb3ZlcnlTZXJ2aWNlRW5kUG9pbnRfaXB2NEFkZHJlc3NlcyA9CmVkZ2VEaXNjb3ZlcnlTZXJ2aWNlRW5kUG9pbnRfaXB2NkFkZHJlc3NlcyA9CmxjbVNlcnZpY2VFbmRQb2ludF9wb3J0ID0gODk4OQpsY21TZXJ2aWNlRW5kUG9pbnRfZnFkbiA9CmxjbVNlcnZpY2VFbmRQb2ludF9pcHY0QWRkcmVzc2VzID0gMTI3LjAuMC4xCmxjbVNlcnZpY2VFbmRQb2ludF9pcHY2QWRkcmVzc2VzID0KCltwYXJ0bmVyX29wXQojIERlZmluZXMgdGhlIHJvbGUgb2YgdGhlIEZlZGVyYXRpb24gTWFuYWdlcgpwYXJ0bmVyX29wX2hvc3QgPSAxMjcuMC4wLjEKcGFydG5lcl9vcF9zZXJ2ZXIgPSAvb3BlcmF0b3JwbGF0Zm9ybS9mZWRlcmF0aW9uL3YxCnBhcnRuZXJfb3BfcG9ydCA9IDg5OTAKI3JvbGUgPSBvcmlnaW5hdGluZ19vcApyb2xlID0gcGFydG5lcl9vcA==
+type: Opaque
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: federation-manager
+  name: federation-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: federation-manager
+  template:
+    metadata:
+      labels:
+        app: federation-manager
+    spec:
+      containers:
+      - name: federation-manager
+        image: ghcr.io/sunriseopenoperatorplatform/federation-manager:0.0.1
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: config
+            readOnly: false
+            mountPath: /usr/app/src/conf/
+        ports:
+        - containerPort: 8989
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+          limits:
+            cpu: "4"
+            memory: "6Gi"
+      imagePullSecrets:
+      - name: federation-manager-regcred
+      volumes:
+        - name: config
+          secret:
+            secretName: federation-manager-config
+            defaultMode: 420
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: federation-manager
+  name: federation-manager
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8989
+    protocol: TCP
+    targetPort: 8989
+  selector:
+    app: federation-manager
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: keycloak-config
+data:
+  realm-import.json: |
+    {
+      "realm": "federation",
+      "enabled": true,
+      "clientScopes" : [
+        {
+          "id" : "439d9c71-8a8a-469c-9280-058016000cc2",
+          "name" : "fed-mgmt",
+          "protocol": "openid-connect",
+          "description" : "fed-mgmt"
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "originating-op-1",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "dd7vNwFqjNpYwaghlEwMbw10g0klWDHb",
+          "redirectUris": ["http://localhost:8080/*"],
+          "publicClient": false,
+          "directAccessGrantsEnabled": true,
+          "serviceAccountsEnabled": true,
+          "defaultClientScopes": ["fed-mgmt"],
+          "webOrigins": ["*"]
+        }
+      ]
+    }
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.1.4
+          ports:
+            - containerPort: 8080
+          args: [ "start-dev", "--import-realm" ]
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: admin
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: admin
+            - name: KC_IMPORT
+              value: /opt/keycloak/data/import/realm-import.json
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import/
+      volumes:
+        - name: realm-import
+          configMap:
+            name: keycloak-config
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: keycloak
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30081
+  selector:
+    app: keycloak
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/db
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: mongodb
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: mongodb
+      containers:
+        - name: mongodb
+          image: 'mongo:7.0'
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: federation-manager
+            - name: MONGODB_DATA_DIR
+              value: /data/db
+            - name: MONDODB_LOG_DIR
+              value: /dev/null
+          volumeMounts:
+            - name: storage
+              mountPath: /data/db
+          imagePullPolicy: IfNotPresent
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+      nodePort: 30017
+  selector:
+    app: mongodb
