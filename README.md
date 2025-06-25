@@ -1,3 +1,11 @@
+## 🚨 Repository Archived — Project has moved!
+
+This repository is no longer maintained and has been archived.
+
+➡️ **The active development now continues at:**  
+🔗 [https://labs.etsi.org/rep/oop/code/service-resource-manager](https://labs.etsi.org/rep/oop/code/service-resource-manager)
+
+
 # Service Resource Manager
 
 The Service Resource Manager (SRM) is a web service written in Python and and based on the Flask micro we framework. It implements the Service Resource manager role of the Operator Platform, defined by the  [GSMA Operator Platform Group (OPG)](https://www.gsma.com/solutions-and-impact/technologies/networks/gsma_resources/gsma-operator-platform-group-september-2024-publications/)
