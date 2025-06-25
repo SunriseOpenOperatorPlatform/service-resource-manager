@@ -8,6 +8,8 @@ The Service Resource Manager facilitates the North-South Bound Interface (NSBI) 
 
 SRM supports the following CAMARA functions:
 
+NOTE: NEF APIs are not yet implemented
+
 <br>
 
 | Edge Cloud Management API  | Network Exposure API  (QoD & Traffic Influence)|
