@@ -41,7 +41,7 @@ Assuming an instance of Open Exposure Gateway (OEG) is running so that CAMARA AP
 
 ### Get all registered apps
 
-_curl -X GET http://[OEG_address]/apps_
+_curl -X GET http://[OEG_root_url]/apps_
 
 Example response:
 
@@ -92,7 +92,7 @@ _[
 
 ### Register app metadata
 
-_curl -X POST http://172.18.0.2:32414/apps --data '{"name": "nginx", "version": "1", "packageType": "QCOW2", "appRepo": {"imagePath": "nginx", "type": "PRIVATEREPO"}
+_curl -X POST http://[OEG_root_url]/apps --data '{"name": "nginx", "version": "1", "packageType": "QCOW2", "appRepo": {"imagePath": "nginx", "type": "PRIVATEREPO"}
 , "componentSpec": [{"componentName": "nginx", "networkInterfaces": [{"protocol": "TCP", "port": 80, "interfaceId": "Uj6qThvzkegxa3L4b88", "visibilityType": "VISIBILITY_EXTERNAL"}, {"protoco
 l": "TCP", "port": 443, "interfaceId": "Uj6qThvzkegxa3L4b88", "visibilityType": "VISIBILITY_EXTERNAL"}]}]}' -H "Content-Type: application/json"_
 
