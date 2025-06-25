@@ -104,7 +104,7 @@ _{
 
 ### Instantiate registered app
 
-_curl -X POST http://172.18.0.2:32414/appinstances --data '{"appId": "685bdc7dc2db24cc0e8927dc", "name": "nginx-test", "appZones": [{"EdgeCloudZone":{"edgeCloudZoneI
+_curl -X POST http://[OEG_root_url]/appinstances --data '{"appId": "685bdc7dc2db24cc0e8927dc", "name": "nginx-test", "appZones": [{"EdgeCloudZone":{"edgeCloudZoneI
 d": "f39c5ea3-f4e3-472f-b080-2f3b81c39995", "edgeCloudZoneName": "k3d-sunriseop-agent-2", "edgeCloudProvider": "ISI"}}]}' -H "Content-Type: application/json"_
 
 Example Response:
