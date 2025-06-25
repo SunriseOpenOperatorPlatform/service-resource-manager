@@ -34,3 +34,73 @@ SRM can be deployed in a Kubernetes cluster by executing the file _srm-deploymen
 |  ARTIFACT_MANAGER_ADDRESS |  Address of the Artefact Manager |
 | EDGE_CLOUD_ADAPTER_NAME  | The adapter SRM is going to use throughout its lifecycle. For direct access to K8s just type 'kubernetes'  |
 |PLATFORM_PROVIDER| The Edge Cloud infrastructure provider|
+
+## Usage
+
+Assuming an instance of Open Exposure Gateway (OEG) is running so that CAMARA APIs are accessible, here are a few request examples with responses, all CAMARA compatible:
+
+### Get all registered apps
+
+_curl -X GET http://[OEG_address]/apps_
+
+Example response:
+
+_[
+  {
+    "appId": "68503f9fe81dc7441fdaae94",
+    "appRepo": {
+      "imagePath": "mongo:4.4.18"
+    },
+    "componentSpec": [
+      {
+        "componentName": "mongodb",
+        "networkInterfaces": [
+          {
+            "port": 27017,
+            "protocol": "TCP"
+          }
+        ]
+      }
+    ],
+    "name": "mongodb",
+    "packageType": "QCOW2"
+  },
+  {
+    "appId": "685122aa8fff437507ec8932",
+    "appRepo": {
+      "imagePath": "nginx"
+    },
+    "componentSpec": [
+      {
+        "componentName": "nginx",
+        "networkInterfaces": [
+          {
+            "port": 80,
+            "protocol": "TCP"
+          },
+          {
+            "port": 443,
+            "protocol": "TCP"
+          }
+        ]
+      }
+    ],
+    "name": "nginx",
+    "packageType": "QCOW2"
+  }
+]_
+
+### Register app metadata
+
+_curl -X POST http://172.18.0.2:32414/apps --data '{"name": "nginx", "version": "1", "packageType": "QCOW2", "appRepo": {"imagePath": "nginx", "type": "PRIVATEREPO"}
+, "componentSpec": [{"componentName": "nginx", "networkInterfaces": [{"protocol": "TCP", "port": 80, "interfaceId": "Uj6qThvzkegxa3L4b88", "visibilityType": "VISIBILITY_EXTERNAL"}, {"protoco
+l": "TCP", "port": 443, "interfaceId": "Uj6qThvzkegxa3L4b88", "visibilityType": "VISIBILITY_EXTERNAL"}]}]}' -H "Content-Type: application/json"_
+
+Example Response:
+
+_{
+  "appId": "685bdc7dc2db24cc0e8927dc"
+}_
+
+### Instantiate registered app
+
